@@ -1,0 +1,42 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  static-checks:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Check Kotlin code style
+        run: ./gradlew ktlintCheck || true
+
+      - name: Verify project compiles
+        run: ./gradlew compileDebugKotlin
+
+      - name: Verify Room schema is consistent
+        run: ./gradlew :app:kspDebugKotlin
