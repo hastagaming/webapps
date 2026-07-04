@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com..web.apps"
+    namespace = "com.web.apps"
     compileSdk = 35
 
     defaultConfig {
