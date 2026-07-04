@@ -1,0 +1,3 @@
+-keep class com.hastagaming.webapps.data.local.entity.** { *; }
+-keepattributes *Annotation*
+-keep class kotlin.Metadata { *; }
