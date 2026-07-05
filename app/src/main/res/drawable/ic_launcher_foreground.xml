@@ -9,25 +9,19 @@
             android:fillColor="#FFFFFF"
             android:pathData="M40,20C28.95,20 20,28.95 20,40C20,51.05 28.95,60 40,60C51.05,60 60,51.05 60,40C60,28.95 51.05,20 40,20ZM40,24C48.84,24 56,31.16 56,40C56,48.84 48.84,56 40,56C31.16,56 24,48.84 24,40C24,31.16 31.16,24 40,24Z" />
         <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M20,40L60,40M40,20L40,60"
             android:strokeColor="#FFFFFF"
-            android:strokeWidth="2" />
+            android:strokeWidth="2"
+            android:pathData="M20,40L60,40M40,20L40,60" />
         <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M40,20 C48,26 52,33 52,40 C52,47 48,54 40,60 C32,54 28,47 28,40 C28,33 32,26 40,20 Z"
-            android:fillAlpha="0"
             android:strokeColor="#FFFFFF"
-            android:strokeWidth="1.6" />
-        <circle
+            android:strokeWidth="1.6"
+            android:pathData="M40,20 C48,26 52,33 52,40 C52,47 48,54 40,60 C32,54 28,47 28,40 C28,33 32,26 40,20 Z" />
+        <path
             android:fillColor="#42A5F5"
-            android:cx="66"
-            android:cy="18"
-            android:radius="10" />
+            android:pathData="M56,18 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0 Z" />
         <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M61,18 L64,21 L71,14"
             android:strokeColor="#FFFFFF"
-            android:strokeWidth="2.4" />
+            android:strokeWidth="2.4"
+            android:pathData="M61,18 L64,21 L71,14" />
     </group>
 </vector>
