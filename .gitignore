@@ -3,3 +3,5 @@ build/
 *.keystore
 release-keystore.jks
 webapps-release-base64.txt
+google-service.json
+google-service-base64.txt
