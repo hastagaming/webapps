@@ -1,7 +1,6 @@
 package com.web.apps.core.container
 
 import android.content.Context
-import android.webkit.WebView
 import com.web.apps.core.webview.ContainerWebViewFactory
 import com.web.apps.data.local.entity.ContainerEntity
 import com.web.apps.data.repository.ContainerRepository
@@ -94,9 +93,18 @@ class ContainerManager @Inject constructor(
         activeSessions.values.forEach { it.webView.reload() }
     }
 
-    fun performHardReset(context: Context, containerId: Long) {
-        stopContainer(containerId)
-        webViewFactory.clearContainerData(context, containerId)
+    fun stopContainer(containerId: Long, keepAliveOverride: Boolean = false) {
+        val session = activeSessions[containerId] ?: return
+        if (keepAliveOverride) return
+
+        session.webView.apply {
+            stopLoading()
+            loadUrl("about:blank")
+            clearHistory()
+            destroy()
+        }
+        session.isAlive = false
+        activeSessions.remove(containerId)
     }
 
     fun stopAll(keepAliveContainerIds: Set<Long> = emptySet()) {
@@ -135,6 +143,11 @@ class ContainerManager @Inject constructor(
 
     suspend fun getKeepAliveContainerIds(): Set<Long> {
         return containerRepository.getKeepAliveContainers().map { it.containerId }.toSet()
+    }
+
+    fun performHardReset(context: Context, containerId: Long) {
+        stopContainer(containerId)
+        webViewFactory.clearContainerData(context, containerId)
     }
 
     fun destroyAllSessions() {

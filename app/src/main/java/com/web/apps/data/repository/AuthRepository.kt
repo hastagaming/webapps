@@ -15,6 +15,11 @@ sealed class AuthResult {
     data class Failure(val message: String) : AuthResult()
 }
 
+sealed class PasswordResetResult {
+    object Success : PasswordResetResult()
+    data class Failure(val message: String) : PasswordResetResult()
+}
+
 @Singleton
 class AuthRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth
@@ -69,11 +74,6 @@ class AuthRepository @Inject constructor(
         } catch (e: Exception) {
             PasswordResetResult.Failure(mapAuthErrorMessage(e))
         }
-    }
-
-    sealed class PasswordResetResult {
-        object Success : PasswordResetResult()
-        data class Failure(val message: String) : PasswordResetResult()
     }
 
     fun signOut() {
