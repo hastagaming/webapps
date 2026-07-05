@@ -4,8 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
+import com.google.firebase.auth.FirebaseAuth
 import com.web.apps.core.container.ContainerManager
 import com.web.apps.ui.backup.BackupScreen
 import com.web.apps.ui.browser.BrowserScreen
@@ -16,14 +18,7 @@ import com.web.apps.ui.login.LoginScreen
 import com.web.apps.ui.permission.PermissionManagerScreen
 import com.web.apps.ui.settings.SettingsScreen
 import com.web.apps.ui.update.UpdateScreen
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.EntryPointAccessors
-
-@EntryPoint
-@InstallIn(ActivityComponent::class)
-interface ContainerManagerEntryPoint {
-    fun containerManager(): ContainerManager
-}
 
 object WebAppsDestinations {
     const val LOGIN = "login"
@@ -44,15 +39,11 @@ object WebAppsDestinations {
 
 @Composable
 fun WebAppsNavHost(
+    navController: NavHostController = rememberNavController(),
     initialContainerId: Long? = null,
-    navController: NavHostController = rememberNavController()
+    onUpdateScreenActiveChanged: (Boolean) -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val containerManager = EntryPoints.get(
-        context,
-        ContainerManagerEntryPoint::class.java
-    ).containerManager()
-    val firebaseAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
+    val firebaseAuth = FirebaseAuth.getInstance()
     val startDestination = when {
         initialContainerId != null -> WebAppsDestinations.browserRoute(initialContainerId)
         firebaseAuth.currentUser != null -> WebAppsDestinations.CONTAINER_LIST
@@ -60,11 +51,12 @@ fun WebAppsNavHost(
     }
 
     NavHost(
-          navController = navController,
-          startDestination = startDestination
+        navController = navController,
+        startDestination = startDestination
     ) {
         composable(WebAppsDestinations.LOGIN) {
-            com.web.apps.ui.login.LoginScreen(
+            onUpdateScreenActiveChanged(false)
+            LoginScreen(
                 onLoginSuccess = {
                     navController.navigate(WebAppsDestinations.CONTAINER_LIST) {
                         popUpTo(WebAppsDestinations.LOGIN) { inclusive = true }
@@ -74,6 +66,7 @@ fun WebAppsNavHost(
         }
 
         composable(WebAppsDestinations.CONTAINER_LIST) {
+            onUpdateScreenActiveChanged(false)
             ContainerListScreen(
                 onContainerClick = { containerId ->
                     navController.navigate(WebAppsDestinations.browserRoute(containerId))
@@ -81,11 +74,11 @@ fun WebAppsNavHost(
                 onNavigateToBackup = {
                     navController.navigate(WebAppsDestinations.BACKUP)
                 },
-                onNavigateToSettings = {
-                    navController.navigate(WebAppsDestinations.SETTINGS)
-                },
                 onNavigateToLockSettings = { containerId ->
                     navController.navigate(WebAppsDestinations.containerLockRoute(containerId))
+                },
+                onNavigateToSettings = {
+                    navController.navigate(WebAppsDestinations.SETTINGS)
                 },
                 onSignOut = {
                     navController.navigate(WebAppsDestinations.LOGIN) {
@@ -94,75 +87,75 @@ fun WebAppsNavHost(
                 }
             )
         }
-        composable(WebAppsDestinations.SETTINGS) {
-            com.web.apps.ui.settings.SettingsScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToUpdate = { navController.navigate(WebAppsDestinations.UPDATE_SYSTEM) }
-            )
-        }
 
-        composable(WebAppsDestinations.UPDATE_SYSTEM) {
-            com.web.apps.ui.update.UpdateScreen(
-                onFinished = { navController.popBackStack() }
-            )
-        }
         composable(
             route = WebAppsDestinations.BROWSER,
-            arguments = listOf(navArgument("containerId") { type = androidx.navigation.NavType.LongType })
+            arguments = listOf(navArgument("containerId") { type = NavType.LongType })
         ) {
+            onUpdateScreenActiveChanged(false)
             BrowserScreen(
-                containerManager = containerManager,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToSourceInspector = { containerId ->
                     navController.navigate(WebAppsDestinations.sourceInspectorRoute(containerId))
                 },
                 onNavigateToPermissionManager = { containerId ->
                     navController.navigate(WebAppsDestinations.permissionManagerRoute(containerId))
-                },
-                onNavigateToSwitchedContainer = { containerId ->
-                    navController.navigate(WebAppsDestinations.browserRoute(containerId)) {
-                        popUpTo(WebAppsDestinations.CONTAINER_LIST)
-                    }
                 }
             )
         }
 
         composable(WebAppsDestinations.BACKUP) {
-            com.web.apps.ui.backup.BackupScreen(
+            onUpdateScreenActiveChanged(false)
+            BackupScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
 
         composable(
             route = WebAppsDestinations.CONTAINER_LOCK,
-            arguments = listOf(androidx.navigation.navArgument("containerId") {
-                type = androidx.navigation.NavType.LongType
-            })
+            arguments = listOf(navArgument("containerId") { type = NavType.LongType })
         ) {
-            com.web.apps.ui.containerlock.ContainerLockScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-
-        composable(
-            route = WebAppsDestinations.PERMISSION_MANAGER,
-            arguments = listOf(androidx.navigation.navArgument("containerId") {
-                type = androidx.navigation.NavType.LongType
-            })
-        ) {
-            com.web.apps.ui.permission.PermissionManagerScreen(
+            onUpdateScreenActiveChanged(false)
+            ContainerLockScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
 
         composable(
             route = WebAppsDestinations.SOURCE_INSPECTOR,
-            arguments = listOf(androidx.navigation.navArgument("containerId") {
-                type = androidx.navigation.NavType.LongType
-            })
+            arguments = listOf(navArgument("containerId") { type = NavType.LongType })
         ) {
-            com.web.apps.ui.inspector.SourceInspectorScreen(
+            onUpdateScreenActiveChanged(false)
+            SourceInspectorScreen(
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = WebAppsDestinations.PERMISSION_MANAGER,
+            arguments = listOf(navArgument("containerId") { type = NavType.LongType })
+        ) {
+            onUpdateScreenActiveChanged(false)
+            PermissionManagerScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(WebAppsDestinations.SETTINGS) {
+            onUpdateScreenActiveChanged(false)
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToUpdate = { navController.navigate(WebAppsDestinations.UPDATE_SYSTEM) }
+            )
+        }
+
+        composable(WebAppsDestinations.UPDATE_SYSTEM) {
+            onUpdateScreenActiveChanged(true)
+            UpdateScreen(
+                onFinished = {
+                    onUpdateScreenActiveChanged(false)
+                    navController.popBackStack()
+                }
             )
         }
     }

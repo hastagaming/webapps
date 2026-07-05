@@ -1,15 +1,16 @@
 package com.web.apps
 
-import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
 import com.google.firebase.auth.FirebaseAuth
-import com.web.apps.ui.navigation.WebAppsDestinations
 import com.web.apps.ui.navigation.WebAppsNavHost
 import com.web.apps.ui.theme.WebAppsTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,10 +29,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             WebAppsTheme {
+                var updateScreenActive by remember { mutableStateOf(false) }
+                isUpdateScreenActive = updateScreenActive
+
                 WebAppsNavHost(
                     initialContainerId = initialContainerId,
-                    onUpdateScreenVisibility = { isVisible ->
-                        isUpdateScreenActive = isVisible
+                    onUpdateScreenActiveChanged = { active ->
+                        updateScreenActive = active
                     }
                 )
             }
@@ -40,31 +44,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         return when (keyCode) {
-            KeyEvent.KEYCODE_HOME -> {
-                if (isUpdateScreenActive) {
-                    true
-                } else {
-                    super.onKeyDown(keyCode, event)
-                }
-            }
-            KeyEvent.KEYCODE_APP_SWITCH -> {
-                if (isUpdateScreenActive) {
-                    true
-                } else {
-                    super.onKeyDown(keyCode, event)
-                }
-            }
-            KeyEvent.KEYCODE_BACK -> {
-                super.onKeyDown(keyCode, event)
+            KeyEvent.KEYCODE_HOME, KeyEvent.KEYCODE_APP_SWITCH -> {
+                if (isUpdateScreenActive) true else super.onKeyDown(keyCode, event)
             }
             else -> super.onKeyDown(keyCode, event)
         }
     }
 
     override fun onBackPressed() {
-        if (isUpdateScreenActive) {
-            return
+        if (!isUpdateScreenActive) {
+            super.onBackPressed()
         }
-        super.onBackPressed()
     }
 }
