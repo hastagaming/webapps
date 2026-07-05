@@ -1,6 +1,7 @@
 package com.web.apps.di
 
 import com.google.firebase.auth.FirebaseAuth
+import com.web.apps.core.auth.GoogleSignInHelper
 import com.web.apps.data.repository.AuthRepository
 import dagger.Module
 import dagger.Provides
