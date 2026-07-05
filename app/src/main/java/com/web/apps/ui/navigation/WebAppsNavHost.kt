@@ -1,20 +1,23 @@
 package com.web.apps.ui.navigation
 
-import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.NavType
 import com.web.apps.core.container.ContainerManager
+import com.web.apps.ui.backup.BackupScreen
 import com.web.apps.ui.browser.BrowserScreen
 import com.web.apps.ui.containerlist.ContainerListScreen
-import dagger.hilt.EntryPoint
-import dagger.hilt.EntryPoints
-import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityComponent
+import com.web.apps.ui.containerlock.ContainerLockScreen
+import com.web.apps.ui.inspector.SourceInspectorScreen
+import com.web.apps.ui.login.LoginScreen
+import com.web.apps.ui.permission.PermissionManagerScreen
+import com.web.apps.ui.settings.SettingsScreen
+import com.web.apps.ui.update.UpdateScreen
+import com.google.firebase.auth.FirebaseAuth
+import dagger.hilt.android.EntryPointAccessors
 
 @EntryPoint
 @InstallIn(ActivityComponent::class)
@@ -30,6 +33,8 @@ object WebAppsDestinations {
     const val CONTAINER_LOCK = "container_lock/{containerId}"
     const val SOURCE_INSPECTOR = "source_inspector/{containerId}"
     const val PERMISSION_MANAGER = "permission_manager/{containerId}"
+    const val SETTINGS = "settings"
+    const val UPDATE_SYSTEM = "update_system"
 
     fun browserRoute(containerId: Long) = "browser/$containerId"
     fun containerLockRoute(containerId: Long) = "container_lock/$containerId"
@@ -76,11 +81,29 @@ fun WebAppsNavHost(
                 onNavigateToBackup = {
                     navController.navigate(WebAppsDestinations.BACKUP)
                 },
+                onNavigateToSettings = {
+                    navController.navigate(WebAppsDestinations.SETTINGS)
+                },
+                onNavigateToLockSettings = { containerId ->
+                    navController.navigate(WebAppsDestinations.containerLockRoute(containerId))
+                },
                 onSignOut = {
                     navController.navigate(WebAppsDestinations.LOGIN) {
                         popUpTo(0)
                     }
                 }
+            )
+        }
+        composable(WebAppsDestinations.SETTINGS) {
+            com.web.apps.ui.settings.SettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToUpdate = { navController.navigate(WebAppsDestinations.UPDATE_SYSTEM) }
+            )
+        }
+
+        composable(WebAppsDestinations.UPDATE_SYSTEM) {
+            com.web.apps.ui.update.UpdateScreen(
+                onFinished = { navController.popBackStack() }
             )
         }
         composable(

@@ -1,14 +1,14 @@
 package com.web.apps.ui.appswitcher
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -91,7 +91,7 @@ fun AppSwitcherOverlay(
                             .fillMaxWidth()
                             .padding(vertical = 24.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
+                        contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
                         items(activeContainers, key = { it.containerId }) { info ->
                             SwitcherCard(
@@ -135,7 +135,7 @@ private fun SwitcherCard(
                 detectVerticalDragGestures(
                     onVerticalDrag = { change, dragAmount ->
                         change.consume()
-                        offsetY += dragAmount
+                        offsetY = offsetY + dragAmount
                     },
                     onDragEnd = {
                         if (offsetY < dismissThresholdPx) {
@@ -182,26 +182,7 @@ private fun SwitcherCard(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .then(
-                        Modifier.pointerInput(info.containerId) {
-                            detectVerticalDragGestures(
-                                onVerticalDrag = { change, dragAmount ->
-                                    change.consume()
-                                    offsetY += dragAmount
-                                },
-                                onDragEnd = {
-                                    if (offsetY < dismissThresholdPx) {
-                                        onSwipeAway()
-                                    } else {
-                                        offsetY = 0f
-                                    }
-                                }
-                            )
-                        }
-                    )
-                    .then(
-                        Modifier.clickable(onClick = onTap)
-                    ),
+                    .clickable(onClick = onTap),
                 contentAlignment = Alignment.BottomStart
             ) {
                 Text(

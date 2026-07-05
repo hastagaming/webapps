@@ -56,6 +56,8 @@ import com.web.apps.data.local.entity.GroupEntity
 fun ContainerListScreen(
     onContainerClick: (Long) -> Unit,
     onNavigateToBackup: () -> Unit = {},
+    onNavigateToLockSettings: (Long) -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     onSignOut: () -> Unit = {},
     viewModel: ContainerListViewModel = hiltViewModel()
 ) {
@@ -147,6 +149,9 @@ fun ContainerListScreen(
                                 onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
                                 onAddContainer = {
                                     viewModel.onEvent(ContainerListEvent.OpenAddContainerDialog(groupId = null))
+                                },
+                                onOpenLockSettings = { containerId ->
+                                    onNavigateToLockSettings(containerId)
                                 }
                             )
                         }
@@ -163,6 +168,9 @@ fun ContainerListScreen(
                             onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
                             onAddContainer = {
                                 viewModel.onEvent(ContainerListEvent.OpenAddContainerDialog(groupId = group.groupId))
+                            },
+                            onOpenLockSettings = { containerId ->
+                                onNavigateToLockSettings(containerId)
                             },
                             onDeleteGroup = { viewModel.onEvent(ContainerListEvent.DeleteGroup(group)) }
                         )
@@ -199,15 +207,17 @@ fun ContainerListScreen(
 @Composable
 private fun GroupSection(
     groupName: String,
-    groupColor: Color,
-    containers: List<ContainerEntity>,
+    groupColor: androidx.compose.ui.graphics.Color,
+    containers: List<com.web.apps.data.local.entity.ContainerEntity>,
     onContainerClick: (Long) -> Unit,
     onRefresh: (Long) -> Unit,
     onStop: (Long) -> Unit,
-    onDelete: (ContainerEntity) -> Unit,
+    onDelete: (com.web.apps.data.local.entity.ContainerEntity) -> Unit,
     onAddContainer: () -> Unit,
+    onOpenLockSettings: (Long) -> Unit,
     onDeleteGroup: (() -> Unit)? = null
 ) {
+
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
         Box(
             modifier = Modifier
@@ -230,7 +240,8 @@ private fun GroupSection(
                     onClick = { onContainerClick(container.containerId) },
                     onRefresh = { onRefresh(container.containerId) },
                     onStop = { onStop(container.containerId) },
-                    onDelete = { onDelete(container) }
+                    onDelete = { onDelete(container) },
+                    onOpenLockSettings = { onOpenLockSettings(container.containerId) }
                 )
             }
 
@@ -247,6 +258,7 @@ private fun GroupSection(
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun ContainerTile(
     container: ContainerEntity,
@@ -327,6 +339,7 @@ private fun AddContainerTile(onClick: () -> Unit) {
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun SearchResultsList(
     results: List<ContainerEntity>,

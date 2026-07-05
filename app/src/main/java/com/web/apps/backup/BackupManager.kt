@@ -47,12 +47,8 @@ class BackupManager @Inject constructor(
         encrypt: Boolean
     ): BackupResult = withContext(Dispatchers.IO) {
         try {
-            val groups = groupDao.observeAllGroups().let { flow ->
-                var latest: List<GroupEntity> = emptyList()
-                kotlinx.coroutines.flow.first(flow).let { latest = it }
-                latest
-            }
-            val containers = kotlinx.coroutines.flow.first(containerDao.observeAllContainers())
+            val groups = groupDao.observeAllGroups().first()
+            val containers = containerDao.observeAllContainers().first()
 
             val payload = BackupPayload(
                 exportedAt = System.currentTimeMillis(),
@@ -96,17 +92,17 @@ class BackupManager @Inject constructor(
             }
 
             val outputStream: OutputStream = context.contentResolver.openOutputStream(destinationUri)
-                ?: return@withContext BackupResult.Failure("Unable To Open Destination File")
+                ?: return@withContext BackupResult.Failure("Could not open the destination file.")
 
             outputStream.use { stream ->
                 stream.write(fileContent.toByteArray(Charsets.UTF_8))
                 stream.flush()
             }
 
-            BackupResult.Success("Backup Saved Successfully (${containers.size} container, ${groups.size} group)")
+            BackupResult.Success("Backup saved successfully (${containers.size} containers, ${groups.size} groups)")
         } catch (e: Exception) {
-            BackupResult.Failure("Export Failed: ${e.message}")
-        }
+            BackupResult.Failure("Export failed: ${e.message}")
+          }
     }
 
     suspend fun importBackup(
@@ -155,9 +151,9 @@ class BackupManager @Inject constructor(
 
     private suspend fun applyImport(payload: BackupPayload, strategy: ImportMergeStrategy) {
         if (strategy == ImportMergeStrategy.REPLACE_ALL) {
-            val existingContainers = kotlinx.coroutines.flow.first(containerDao.observeAllContainers())
+            val existingContainers = containerDao.observeAllContainers().first()
             existingContainers.forEach { containerDao.deleteContainer(it) }
-            val existingGroups = kotlinx.coroutines.flow.first(groupDao.observeAllGroups())
+            val existingGroups = groupDao.observeAllGroups().first()
             existingGroups.forEach { groupDao.deleteGroup(it) }
         }
 
