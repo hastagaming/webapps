@@ -56,6 +56,7 @@ import com.web.apps.data.local.entity.GroupEntity
 fun ContainerListScreen(
     onContainerClick: (Long) -> Unit,
     onNavigateToBackup: () -> Unit = {},
+    onSignOut: () -> Unit = {},
     viewModel: ContainerListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -68,6 +69,12 @@ fun ContainerListScreen(
                 actions = {
                     IconButton(onClick = { /* navController.navigate(WebAppsDestinations.BACKUP) */ }) {
                         Icon(androidx.compose.material.icons.Icons.Filled.Settings, contentDescription = "Backup & Restore")
+                    }
+                    IconButton(onClick = {
+                        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                        onSignOut()
+                    }) {
+                        Icon(androidx.compose.material.icons.Icons.Filled.Logout, contentDescription = "Sign Out")
                     }
                     IconButton(onClick = { viewModel.onEvent(ContainerListEvent.RefreshAll) }) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh All")

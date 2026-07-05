@@ -23,6 +23,7 @@ interface ContainerManagerEntryPoint {
 }
 
 object WebAppsDestinations {
+    const val LOGIN = "login"
     const val CONTAINER_LIST = "container_list"
     const val BROWSER = "browser/{containerId}"
     const val BACKUP = "backup"
@@ -46,26 +47,42 @@ fun WebAppsNavHost(
         context,
         ContainerManagerEntryPoint::class.java
     ).containerManager()
+    val firebaseAuth = com.google.firebase.auth.FirebaseAuth.getInstance()
+    val startDestination = when {
+        initialContainerId != null -> WebAppsDestinations.browserRoute(initialContainerId)
+        firebaseAuth.currentUser != null -> WebAppsDestinations.CONTAINER_LIST
+        else -> WebAppsDestinations.LOGIN
+    }
 
     NavHost(
-        navController = navController,
-        startDestination = if (initialContainerId != null) {
-            WebAppsDestinations.browserRoute(initialContainerId)
-        } else {
-            WebAppsDestinations.CONTAINER_LIST
-        }
+          navController = navController,
+          startDestination = startDestination
     ) {
-        composable(WebAppsDestinations.CONTAINER_LIST) {
-            ContainerListScreen(
-                 onContainerClick = { containerId ->
-                     navController.navigate(WebAppsDestinations.browserRoute(containerId))
-                 },
-                 onNavigateToBackup = {
-                     navController.navigate(WebAppsDestinations.BACKUP)
-                 }
+        composable(WebAppsDestinations.LOGIN) {
+            com.web.apps.ui.login.LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(WebAppsDestinations.CONTAINER_LIST) {
+                        popUpTo(WebAppsDestinations.LOGIN) { inclusive = true }
+                    }
+                }
             )
         }
 
+        composable(WebAppsDestinations.CONTAINER_LIST) {
+            ContainerListScreen(
+                onContainerClick = { containerId ->
+                    navController.navigate(WebAppsDestinations.browserRoute(containerId))
+                },
+                onNavigateToBackup = {
+                    navController.navigate(WebAppsDestinations.BACKUP)
+                },
+                onSignOut = {
+                    navController.navigate(WebAppsDestinations.LOGIN) {
+                        popUpTo(0)
+                    }
+                }
+            )
+        }
         composable(
             route = WebAppsDestinations.BROWSER,
             arguments = listOf(navArgument("containerId") { type = androidx.navigation.NavType.LongType })
