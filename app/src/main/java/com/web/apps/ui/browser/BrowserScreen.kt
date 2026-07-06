@@ -11,6 +11,8 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -81,7 +83,7 @@ fun BrowserScreen(
                             uiState.container?.let { onNavigateToSourceInspector(it.containerId) }
                         }) {
                             Icon(
-                                androidx.compose.material.icons.Icons.Filled.Code,
+                                Icons.Filled.Code,
                                 contentDescription = "Source Inspector"
                             )
                         }
@@ -99,7 +101,7 @@ fun BrowserScreen(
                             uiState.container?.let { onNavigateToPermissionManager(it.containerId) }
                         }) {
                             Icon(
-                                androidx.compose.material.icons.Icons.Filled.Security,
+                                Icons.Filled.Security,
                                 contentDescription = "Site Permissions"
                             )
                         }
