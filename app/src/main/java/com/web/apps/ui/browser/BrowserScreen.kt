@@ -122,13 +122,15 @@ fun BrowserScreen(
             }
         }
     ) { paddingValues ->
-        Column{
+        Column(
+           modifier = Modifier
+               .fillMaxSize()
+               .padding(paddingValues)
+        ) {
             if (uiState.isLoading) {
                 LinearProgressIndicator(
                     progress = { uiState.loadProgress / 100f },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(PaddingValues)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
