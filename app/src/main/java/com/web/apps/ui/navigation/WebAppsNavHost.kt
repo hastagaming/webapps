@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
@@ -93,7 +94,15 @@ fun WebAppsNavHost(
             arguments = listOf(navArgument("containerId") { type = NavType.LongType })
         ) {
             onUpdateScreenActiveChanged(false)
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val containerManager = remember {
+                dagger.hilt.android.EntryPointAccessors.fromApplication(
+                    context.applicationContext,
+                    ContainerManagerEntryPoint::class.java
+                ).containerManager()
+            }
             BrowserScreen(
+                containerManager = containerManager,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToSourceInspector = { containerId ->
                     navController.navigate(WebAppsDestinations.sourceInspectorRoute(containerId))
@@ -159,4 +168,10 @@ fun WebAppsNavHost(
             )
         }
     }
+}
+
+@dagger.hilt.EntryPoint
+@dagger.hilt.InstallIn(dagger.hilt.android.components.SingletonComponent::class)
+interface ContainerManagerEntryPoint {
+    fun containerManager(): ContainerManager
 }
