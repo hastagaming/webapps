@@ -1,13 +1,14 @@
 package com.web.apps.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.navigation.NavType
 import com.google.firebase.auth.FirebaseAuth
 import com.web.apps.core.container.ContainerManager
 import com.web.apps.ui.backup.BackupScreen
@@ -19,7 +20,10 @@ import com.web.apps.ui.login.LoginScreen
 import com.web.apps.ui.permission.PermissionManagerScreen
 import com.web.apps.ui.settings.SettingsScreen
 import com.web.apps.ui.update.UpdateScreen
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.android.components.SingletonComponent
 
 object WebAppsDestinations {
     const val LOGIN = "login"
@@ -94,9 +98,9 @@ fun WebAppsNavHost(
             arguments = listOf(navArgument("containerId") { type = NavType.LongType })
         ) {
             onUpdateScreenActiveChanged(false)
-            val context = androidx.compose.ui.platform.LocalContext.current
+            val context = LocalContext.current
             val containerManager = remember {
-                dagger.hilt.android.EntryPointAccessors.fromApplication(
+                EntryPointAccessors.fromApplication(
                     context.applicationContext,
                     ContainerManagerEntryPoint::class.java
                 ).containerManager()
@@ -170,8 +174,8 @@ fun WebAppsNavHost(
     }
 }
 
-@dagger.hilt.EntryPoint
-@dagger.hilt.InstallIn(dagger.hilt.android.components.SingletonComponent::class)
+@EntryPoint
+@InstallIn(SingletonComponent::class)
 interface ContainerManagerEntryPoint {
     fun containerManager(): ContainerManager
 }
