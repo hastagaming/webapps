@@ -1,5 +1,6 @@
 package com.web.apps.ui.browser
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -120,11 +121,13 @@ fun BrowserScreen(
             }
         }
     ) { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column{
             if (uiState.isLoading) {
                 LinearProgressIndicator(
                     progress = { uiState.loadProgress / 100f },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(PaddingValues)
                 )
             }
 
