@@ -1,5 +1,9 @@
 package com.web.apps.core.recovery
 
+import dagger.Lazy
+import com.web.apps.core.container.ContainerManager
+import javax.inject.Inject
+import javax.inject.Singleton
 import com.web.apps.core.container.ContainerManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,9 +18,10 @@ import javax.inject.Singleton
 
 @Singleton
 class RecoveryManager @Inject constructor(
-    private val containerManager: ContainerManager
+    private val containerManagerLazy: Lazy<com.web.apps.core.container.ContainerManager>
 ) {
-
+    private val containerManager: com.web.apps.core.container.ContainerManager
+        get() = containerManagerLazy.get()
     private val crashCountByContainer = mutableMapOf<Long, Int>()
     private val lastCrashTimestampByContainer = mutableMapOf<Long, Long>()
     private val loadStartTimestampByContainer = mutableMapOf<Long, Long>()
