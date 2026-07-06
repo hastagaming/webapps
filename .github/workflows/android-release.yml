@@ -78,7 +78,7 @@ jobs:
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
         run: |
           ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file="GITHUB_WORKSPACE/app/release-keystore.jks" \
+            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/app/release-keystore.jks" \
             -Pandroid.injected.signing.store.password="$SIGNING_STORE_PASSWORD" \
             -Pandroid.injected.signing.key.alias="$SIGNING_KEY_ALIAS" \
             -Pandroid.injected.signing.key.password="$SIGNING_KEY_PASSWORD"
@@ -91,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: webapps-release-apk
-          path: app/build/outputs/apk/release/app-release.apk
+          path: app/build/outputs/apk/release/WebApps.apk
 
       - name: Determine release tag
         id: release_tag
@@ -107,5 +107,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_tag.outputs.tag_name }}
-          files: app/build/outputs/apk/release/app-release.apk
+          files: app/build/outputs/apk/release/WebApps.apk
           generate_release_notes: true
