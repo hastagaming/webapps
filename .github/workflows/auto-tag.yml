@@ -27,6 +27,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.AUTO_TAG_PAT }}
 
       - name: Determine next version tag
         id: next_version
@@ -71,6 +72,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag "${{ steps.next_version.outputs.new_tag }}"
+          git remote set-url origin https://x-access-token:${{ secrets.AUTO_TAG_PAT }}@github.com/${{ github.repository }}.git
           git push origin "${{ steps.next_version.outputs.new_tag }}"
 
       - name: Summary
