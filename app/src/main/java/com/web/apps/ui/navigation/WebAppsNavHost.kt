@@ -23,7 +23,7 @@ import com.web.apps.ui.update.UpdateScreen
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.android.components.SingletonComponent
+import dagger.hilt.components.SingletonComponent
 
 object WebAppsDestinations {
     const val LOGIN = "login"

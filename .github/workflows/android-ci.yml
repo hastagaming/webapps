@@ -28,12 +28,15 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: gradle-v2-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            gradle-${{ runner.os }}-
+            gradle-v2-${{ runner.os }}-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Clean Gradle build (avoid stale KSP cache)
+        run: ./gradlew clean --no-build-cache
 
       - name: Write google-services.json from secret
         env:
