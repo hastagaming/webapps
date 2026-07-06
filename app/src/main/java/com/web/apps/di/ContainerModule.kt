@@ -37,12 +37,6 @@ object ContainerModule {
 
     @Provides
     @Singleton
-    fun provideRecoveryManager(
-        containerManagerLazy: dagger.Lazy<ContainerManager>
-    ): RecoveryManager = RecoveryManager(containerManagerLazy)
-
-    @Provides
-    @Singleton
     fun provideContainerManager(
         webViewFactory: ContainerWebViewFactory,
         containerRepository: ContainerRepository

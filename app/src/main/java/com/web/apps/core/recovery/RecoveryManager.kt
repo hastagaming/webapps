@@ -4,7 +4,6 @@ import dagger.Lazy
 import com.web.apps.core.container.ContainerManager
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.web.apps.core.container.ContainerManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -13,8 +12,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class RecoveryManager @Inject constructor(
