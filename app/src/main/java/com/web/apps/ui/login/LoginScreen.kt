@@ -150,7 +150,10 @@ fun LoginScreen(
             }
 
             Button(
-                onClick = { viewModel.onEvent(LoginEvent.SubmitEmailAuth) },
+                onClick = {
+                   android.widget.Toast.makeText(context, "Button tapped!", android.widget.Toast.LENGTH_SHORT).show()
+                    viewModel.onEvent(LoginEvent.SubmitEmailAuth)
+                },
                 enabled = !uiState.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -182,7 +185,10 @@ fun LoginScreen(
             }
 
             OutlinedButton(
-                onClick = { onGoogleSignInRequested(webClientId) },
+                onClick = {
+                    android.widget.Toast.makeText(context, "Google button tapped!", android.widget.Toast.LENGTH_SHORT).show()
+                    onGoogleSignInRequested(webClientId)
+                },
                 enabled = !uiState.isLoading,
                 colors = ButtonDefaults.outlinedButtonColors(),
                 modifier = Modifier
