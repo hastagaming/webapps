@@ -46,7 +46,7 @@ object WebAppsDestinations {
 fun WebAppsNavHost(
     navController: NavHostController = rememberNavController(),
     initialContainerId: Long? = null,
-    onUpdateScreenActiveChanged: (Boolean) -> Unit = {}
+    onUpdateScreenActiveChanged: (Boolean) -> Unit = {},
     onGoogleSignInRequested: (String) -> Unit = {}
 ) {
     val firebaseAuth = FirebaseAuth.getInstance()
