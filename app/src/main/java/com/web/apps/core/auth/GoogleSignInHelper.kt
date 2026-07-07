@@ -1,13 +1,11 @@
 package com.web.apps.core.auth
 
 import android.content.Context
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialException
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.web.apps.R
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,42 +18,42 @@ sealed class GoogleSignInResult {
 @Singleton
 class GoogleSignInHelper @Inject constructor() {
 
-    suspend fun requestGoogleIdToken(
-        context: Context,
-        webClientId: String
-    ): GoogleSignInResult {
-        val credentialManager = CredentialManager.create(context)
+    private var googleSignInClient: GoogleSignInClient? = null
 
-        val googleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(webClientId)
-            .setAutoSelectEnabled(false)
-            .build()
+    fun initializeGoogleSignIn(context: Context, webClientId: String) {
+        if (googleSignInClient == null) {
+            val gsoBuilder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(webClientId)
+                .requestEmail()
+                .build()
 
-        val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
-            .build()
+            googleSignInClient = GoogleSignIn.getClient(context, gsoBuilder)
+        }
+    }
 
+    fun signOut(context: Context) {
+        googleSignInClient?.signOut()
+    }
+
+    fun getSignInIntent(context: Context): android.content.Intent? {
+        return googleSignInClient?.signInIntent
+    }
+
+    fun handleSignInResult(data: android.content.Intent?): GoogleSignInResult {
         return try {
-            val response = credentialManager.getCredential(context, request)
-            val credential = response.credential
-
-            if (credential is CustomCredential &&
-                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-            ) {
-                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                GoogleSignInResult.Success(googleIdTokenCredential.idToken)
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account?.idToken
+            if (idToken != null) {
+                GoogleSignInResult.Success(idToken)
             } else {
-                GoogleSignInResult.Failure("Unexpected credential type received.")
+                GoogleSignInResult.Failure("ID token is null. Please try again.")
             }
-        } catch (e: GetCredentialException) {
-            if (e.type == "android.credentials.GetCredentialException.TYPE_USER_CANCELED") {
-                GoogleSignInResult.Cancelled
-            } else {
-                GoogleSignInResult.Failure(e.message ?: "Google sign-in was cancelled or failed.")
+        } catch (e: ApiException) {
+            when (e.statusCode) {
+                12501 -> GoogleSignInResult.Cancelled
+                else -> GoogleSignInResult.Failure(e.message ?: "Google Sign-In failed.")
             }
-        } catch (e: GoogleIdTokenParsingException) {
-            GoogleSignInResult.Failure("Failed to parse Google ID token.")
         }
     }
 }

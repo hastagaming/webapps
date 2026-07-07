@@ -5,34 +5,15 @@ on:
     tags:
       - 'v*.*.*'
   workflow_dispatch:
-    inputs:
-      version_name:
-        description: 'Version name for this manual release build'
-        required: false
-        default: 'manual-build'
+
+permissions:
+  contents: write
 
 jobs:
-  wait-for-ci:
-    name: Wait for Android CI to pass
+  sign-and-release:
+    name: Sign APK and Publish Release
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    steps:
-      - name: Wait for Android CI check to succeed
-        uses: lewagon/wait-on-check-action@v1.3.4
-        with:
-          ref: ${{ github.sha }}
-          check-name: 'Build and Lint'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 15
-          allowed-conclusions: success
-
-  release:
-    name: Build Signed Release APK
-    needs: wait-for-ci
-    if: always() && (github.event_name == 'workflow_dispatch' || needs.wait-for-ci.result == 'success')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout repository
@@ -43,78 +24,58 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
+      - name: Download unsigned APK from CI
+        uses: dawidd6/action-download-artifact@v6
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-v2-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-v2-${{ runner.os }}-
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Clean Gradle build (avoid stale KSP cache)
-        run: ./gradlew clean --no-build-cache
+          workflow: android-ci.yml
+          name: webapps-unsigned-apk
+          path: ./unsigned-apk
+          search_artifacts: true
 
       - name: Decode signing keystore
         env:
           SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
         run: |
-          echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > app/release-keystore.jks
+          echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > release-keystore.jks
 
-      - name: Decode Google Services JSON FROM SECRET
-        env:
-          GOOGLE_SERVICES_SECRET: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+      - name: Zipalign APK
         run: |
-          echo "$GOOGLE_SERVICES_SECRET" | base64 --decode > app/google-services.json
+          $ANDROID_HOME/build-tools/35.0.0/zipalign -v 4 \
+            ./unsigned-apk/app-release-unsigned.apk \
+            ./unsigned-apk/app-release-aligned.apk
 
-      - name: Build release APK
+      - name: Sign APK with apksigner
         env:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
         run: |
-          ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/app/release-keystore.jks" \
-            -Pandroid.injected.signing.store.password="$SIGNING_STORE_PASSWORD" \
-            -Pandroid.injected.signing.key.alias="$SIGNING_KEY_ALIAS" \
-            -Pandroid.injected.signing.key.password="$SIGNING_KEY_PASSWORD"
+          $ANDROID_HOME/build-tools/35.0.0/apksigner sign \
+            --ks release-keystore.jks \
+            --ks-key-alias "$SIGNING_KEY_ALIAS" \
+            --ks-pass pass:"$SIGNING_STORE_PASSWORD" \
+            --key-pass pass:"$SIGNING_KEY_PASSWORD" \
+            --out ./unsigned-apk/app-release-signed.apk \
+            ./unsigned-apk/app-release-aligned.apk
+
+      - name: Verify APK signature
+        run: |
+          $ANDROID_HOME/build-tools/35.0.0/apksigner verify \
+            -v ./unsigned-apk/app-release-signed.apk
+
+      - name: Rename APK with tag name
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          mv ./unsigned-apk/app-release-signed.apk "./unsigned-apk/WebApps-${TAG_NAME}.apk"
 
       - name: Remove keystore file
         if: always()
-        run: rm -f app/release-keystore.jks
-
-      - name: Rename APK to Custom Name
-        run: |
-          # Fetch the clean tag name or use a fallback name
-          TAG_NAME="${{ steps.release_tag.outputs.tag_name }}"
-
-          # Rename the file from app-release.apk to your custom name layout
-          mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/WebApps-${TAG_NAME}.apk
-
-      - name: Upload release APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: webapps-release-apk
-          path: app/build/outputs/apk/release/WebApps-${{ steps.release_tag.outputs.tag_name }}.apk
-
-      - name: Determine release tag
-        id: release_tag
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "tag_name=manual-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "tag_name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
-          fi
+        run: rm -f release-keystore.jks
 
       - name: Create GitHub Release
-        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.release_tag.outputs.tag_name }}
-          files: app/build/outputs/apk/release/WebApps-${{ steps.release_tag.outputs.tag_name }}.apk
+          files: ./unsigned-apk/WebApps-*.apk
           generate_release_notes: true

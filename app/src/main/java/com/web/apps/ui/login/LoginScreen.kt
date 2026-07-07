@@ -53,6 +53,7 @@ import com.web.apps.R
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
+    onGoogleSignInRequested: (String) -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -61,6 +62,15 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
 
     val webClientId = context.getString(R.string.default_web_client_id)
+    val context = LocalContext.current
+    val activity = context as? androidx.activity.ComponentActivity
+    val activityResultLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.contracts.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            viewModel.handleGoogleSignInResult(result.data)
+        }
+    }
 
     LaunchedEffect(uiState.isAuthenticated) {
         if (uiState.isAuthenticated) {
@@ -183,7 +193,18 @@ fun LoginScreen(
             }
 
             OutlinedButton(
-                onClick = { viewModel.signInWithGoogle(context, webClientId) },
+                onClick = {
+                    val webClientId = context.getString(R.string.default_web_client_id)
+                    val signInIntent = com.web.apps.core.auth.GoogleSignInHelper()
+                    val intent = androidx.activity.compose.rememberLauncherForActivityResult(
+                        androidx.activity.contracts.ActivityResultContracts.StartActivityForResult()
+                    ) { result ->
+                        if (result.resultCode == android.app.Activity.RESULT_OK) {
+                            viewModel.handleGoogleSignInResult(result.data)
+                        }
+                    }
+                    onGoogleSignInRequested(webClientId)
+                },
                 enabled = !uiState.isLoading,
                 colors = ButtonDefaults.outlinedButtonColors(),
                 modifier = Modifier

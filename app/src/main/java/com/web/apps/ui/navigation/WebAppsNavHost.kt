@@ -47,6 +47,7 @@ fun WebAppsNavHost(
     navController: NavHostController = rememberNavController(),
     initialContainerId: Long? = null,
     onUpdateScreenActiveChanged: (Boolean) -> Unit = {}
+    onGoogleSignInRequested: (String) -> Unit = {}
 ) {
     val firebaseAuth = FirebaseAuth.getInstance()
     val startDestination = when {
@@ -65,7 +66,8 @@ fun WebAppsNavHost(
                 onLoginSuccess = {
                     navController.navigate(WebAppsDestinations.CONTAINER_LIST) {
                         popUpTo(WebAppsDestinations.LOGIN) { inclusive = true }
-                    }
+                    },
+                    onGoogleSignInRequested = onGoogleSignInRequested
                 }
             )
         }

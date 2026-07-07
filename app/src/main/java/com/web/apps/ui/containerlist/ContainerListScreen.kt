@@ -82,6 +82,9 @@ fun ContainerListScreen(
                     }) {
                         Icon(androidx.compose.material.icons.Icons.Filled.Logout, contentDescription = "Sign Out")
                     }
+                    IconButton(onClick = { onNavigateToSettings() }) {
+                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                    }
                     IconButton(onClick = { viewModel.onEvent(ContainerListEvent.RefreshAll) }) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh All")
                     }

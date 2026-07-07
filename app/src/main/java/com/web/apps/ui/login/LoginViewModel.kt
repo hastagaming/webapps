@@ -72,17 +72,33 @@ class LoginViewModel @Inject constructor(
 
     fun signInWithGoogle(context: Context, webClientId: String) {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        googleSignInHelper.initializeGoogleSignIn(context, webClientId)
+        val signInIntent = googleSignInHelper.getSignInIntent(context)
+        if (signInIntent != null) {
+            (context as? androidx.activity.ComponentActivity)?.startActivityForResult(signInIntent, GOOGLE_SIGN_IN_REQUEST_CODE)
+        } else {
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                errorMessage = "Failed to initialize Google Sign-In."
+            )
+        }
+    }
 
+    companion object {
+        private const val GOOGLE_SIGN_IN_REQUEST_CODE = 9001
+    }
+
+    fun handleGoogleSignInResult(data: android.content.Intent?) {
         viewModelScope.launch {
-            when (val tokenResult = googleSignInHelper.requestGoogleIdToken(context, webClientId)) {
+            when (val result = googleSignInHelper.handleSignInResult(data)) {
                 is GoogleSignInResult.Success -> {
-                    val authResult = authRepository.signInWithGoogleIdToken(tokenResult.idToken)
+                    val authResult = authRepository.signInWithGoogleIdToken(result.idToken)
                     handleAuthResult(authResult)
                 }
                 is GoogleSignInResult.Failure -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = tokenResult.message
+                        errorMessage = result.message
                     )
                 }
                 is GoogleSignInResult.Cancelled -> {
