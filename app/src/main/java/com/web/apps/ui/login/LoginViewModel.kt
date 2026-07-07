@@ -12,6 +12,7 @@ import com.web.apps.data.repository.AuthRepository
 import com.web.apps.data.repository.AuthResult
 import com.web.apps.data.repository.PasswordResetResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +26,7 @@ class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val googleSignInHelper: GoogleSignInHelper,
     private val googleSignInResultBus: GoogleSignInResultBus
+    ApplicationContext private val appContext: android.content.Context
 ) : ViewModel() {
 
     init {
