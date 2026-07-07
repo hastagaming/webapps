@@ -20,7 +20,8 @@ private const val MIN_PASSWORD_LENGTH = 6
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val googleSignInHelper: GoogleSignInHelper
+    private val googleSignInHelper: GoogleSignInHelper,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -51,8 +52,10 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun submitEmailAuth() {
+        com.web.apps.core.crash.DebugLogger.log(appContext, "WebAppsAuth", "submitEmailAuth called")
         val state = _uiState.value
         val validationError = validateInput(state.email, state.password)
+        com.web.apps.core.crash.DebugLogger.log(appContext, "WebAppsAuth", "Validation error: $validationError")
         if (validationError != null) {
             _uiState.value = state.copy(errorMessage = validationError)
             return
@@ -61,11 +64,13 @@ class LoginViewModel @Inject constructor(
         _uiState.value = state.copy(isLoading = true, errorMessage = null)
 
         viewModelScope.launch {
+            com.web.apps.core.crash.DebugLogger.log(appContext, "WebAppsAuth", "Coroutine launched, calling repository")
             val result = if (state.isRegisterMode) {
                 authRepository.registerWithEmail(state.email.trim(), state.password)
             } else {
                 authRepository.signInWithEmail(state.email.trim(), state.password)
             }
+            com.web.apps.core.crash.DebugLogger.log(appContext, "WebAppsAuth", "Repository returned: $result")
             handleAuthResult(result)
         }
     }
@@ -109,8 +114,10 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun handleAuthResult(result: AuthResult) {
+        com.web.apps.core.crash.DebugLogger.log(appContext, "WebAppsAuth", "handleAuthResult called: $result")
         when (result) {
             is AuthResult.Success -> {
+                com.web.apps.core.crash.DebugLogger.log(appContext, "WebAppsAuth", "Success! User: ${result.user.email}")
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isAuthenticated = true,
@@ -118,6 +125,7 @@ class LoginViewModel @Inject constructor(
                 )
             }
             is AuthResult.Failure -> {
+                com.web.apps.core.crash.DebugLogger.log(appContext, "WebAppsAuth", "Failure: ${result.message}")
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorMessage = result.message
