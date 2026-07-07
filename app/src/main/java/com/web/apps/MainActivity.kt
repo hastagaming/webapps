@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
 import com.web.apps.core.auth.GoogleSignInHelper
+import com.web.apps.core.auth.GoogleSignInResultBus
 import com.web.apps.ui.navigation.WebAppsNavHost
 import com.web.apps.ui.theme.WebAppsTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -21,12 +22,13 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var googleSignInHelper: GoogleSignInHelper
 
+    @Inject
+    lateinit var googleSignInResultBus: GoogleSignInResultBus
+
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            googleSignInHelper.handleSignInResult(result.data)
-        }
+        googleSignInResultBus.emit(if (result.resultCode == RESULT_OK) result.data else null)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,7 +48,6 @@ class MainActivity : ComponentActivity() {
                     onGoogleSignInRequested = { webClientId ->
                         googleSignInHelper.initializeGoogleSignIn(this@MainActivity, webClientId)
                         val intent = googleSignInHelper.getSignInIntent(this@MainActivity)
-                        android.widget.Toast.makeText(this@MainActivity, "Intent null? ${intent == null}", android.widget.Toast.LENGTH_LONG).show()
                         if (intent != null) {
                             googleSignInLauncher.launch(intent)
                         }

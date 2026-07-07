@@ -3,6 +3,9 @@ package com.web.apps.ui.login
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.web.apps.core.auth.GoogleSignInResultBus
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.launchIn
 import com.web.apps.core.auth.GoogleSignInHelper
 import com.web.apps.core.auth.GoogleSignInResult
 import com.web.apps.data.repository.AuthRepository
@@ -21,8 +24,14 @@ private const val MIN_PASSWORD_LENGTH = 6
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val googleSignInHelper: GoogleSignInHelper,
-    @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context
+    private val googleSignInResultBus: GoogleSignInResultBus
 ) : ViewModel() {
+
+    init {
+        googleSignInResultBus.results
+            .onEach { intent -> handleGoogleSignInResult(intent) }
+            .launchIn(viewModelScope)
+    }
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()

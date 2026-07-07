@@ -151,7 +151,6 @@ fun LoginScreen(
 
             Button(
                 onClick = {
-                   android.widget.Toast.makeText(context, "Button tapped!", android.widget.Toast.LENGTH_SHORT).show()
                     viewModel.onEvent(LoginEvent.SubmitEmailAuth)
                 },
                 enabled = !uiState.isLoading,
@@ -186,7 +185,6 @@ fun LoginScreen(
 
             OutlinedButton(
                 onClick = {
-                    android.widget.Toast.makeText(context, "Google button tapped!", android.widget.Toast.LENGTH_SHORT).show()
                     onGoogleSignInRequested(webClientId)
                 },
                 enabled = !uiState.isLoading,
