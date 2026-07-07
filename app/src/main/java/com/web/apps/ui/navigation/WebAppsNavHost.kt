@@ -66,9 +66,9 @@ fun WebAppsNavHost(
                 onLoginSuccess = {
                     navController.navigate(WebAppsDestinations.CONTAINER_LIST) {
                         popUpTo(WebAppsDestinations.LOGIN) { inclusive = true }
-                    },
-                    onGoogleSignInRequested = onGoogleSignInRequested
-                }
+                    }
+                },
+                onGoogleSignInRequested = onGoogleSignInRequested
             )
         }
 
