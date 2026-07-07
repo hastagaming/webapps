@@ -46,6 +46,7 @@ class MainActivity : ComponentActivity() {
                     onGoogleSignInRequested = { webClientId ->
                         googleSignInHelper.initializeGoogleSignIn(this@MainActivity, webClientId)
                         val intent = googleSignInHelper.getSignInIntent(this@MainActivity)
+                        android.widget.Toast.makeText(this@MainActivity, "Intent null? ${intent == null}", android.widget.Toast.LENGTH_LONG).show()
                         if (intent != null) {
                             googleSignInLauncher.launch(intent)
                         }
