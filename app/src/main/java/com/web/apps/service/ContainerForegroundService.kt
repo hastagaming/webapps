@@ -143,7 +143,7 @@ class ContainerForegroundService : Service() {
         val refreshAllIntent = buildActionPendingIntent(ACTION_REFRESH_ALL, requestCode = 100)
         val stopAllIntent = buildActionPendingIntent(ACTION_STOP_ALL, requestCode = 101)
 
-        return NotificationCompat.Builder(this, WebAppsApplication.CHANNEL_ID_CONTAINER_SERVICE)
+        return NotificationCompat.Builder(this, com.web.apps.WebAppsApplication.CHANNEL_ID_CONTAINER_SERVICE)
             .setContentTitle("WebApps Is Running")
             .setContentText("$activeCount active containers")
             .setSmallIcon(R.drawable.ic_notification_container)

@@ -18,7 +18,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,7 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -37,7 +36,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,15 +60,6 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
 
     val webClientId = context.getString(R.string.default_web_client_id)
-    val context = LocalContext.current
-    val activity = context as? androidx.activity.ComponentActivity
-    val activityResultLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        androidx.activity.contracts.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            viewModel.handleGoogleSignInResult(result.data)
-        }
-    }
 
     LaunchedEffect(uiState.isAuthenticated) {
         if (uiState.isAuthenticated) {
@@ -184,27 +173,16 @@ fun LoginScreen(
                     .padding(vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Divider(modifier = Modifier.weight(1f))
+                HorizontalDivider(modifier = Modifier.weight(1f))
                 Text(
                     text = "  OR  ",
                     style = MaterialTheme.typography.bodySmall
                 )
-                Divider(modifier = Modifier.weight(1f))
+                HorizontalDivider(modifier = Modifier.weight(1f))
             }
 
             OutlinedButton(
-                onClick = {
-                    val webClientId = context.getString(R.string.default_web_client_id)
-                    val signInIntent = com.web.apps.core.auth.GoogleSignInHelper()
-                    val intent = androidx.activity.compose.rememberLauncherForActivityResult(
-                        androidx.activity.contracts.ActivityResultContracts.StartActivityForResult()
-                    ) { result ->
-                        if (result.resultCode == android.app.Activity.RESULT_OK) {
-                            viewModel.handleGoogleSignInResult(result.data)
-                        }
-                    }
-                    onGoogleSignInRequested(webClientId)
-                },
+                onClick = { onGoogleSignInRequested(webClientId) },
                 enabled = !uiState.isLoading,
                 colors = ButtonDefaults.outlinedButtonColors(),
                 modifier = Modifier

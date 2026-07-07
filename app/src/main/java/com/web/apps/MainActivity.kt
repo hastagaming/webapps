@@ -46,9 +46,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             WebAppsTheme {
-                var updateScreenActive by remember { mutableStateOf(false) }
-                isUpdateScreenActive = updateScreenActive.value
-
                 WebAppsNavHost(
                     initialContainerId = initialContainerId,
                     onUpdateScreenActiveChanged = { active ->

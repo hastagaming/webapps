@@ -1,19 +1,21 @@
 name: Android Release
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["Android CI"]
+    types:
+      - completed
 
 permissions:
   contents: write
 
 jobs:
-  sign-and-release:
+  check-and-sign:
     name: Sign APK and Publish Release
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'v')
 
     steps:
       - name: Checkout repository
