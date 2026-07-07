@@ -1,21 +1,13 @@
 package com.web.apps
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.core.view.WindowCompat
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.core.view.WindowCompat
-import com.google.firebase.auth.FirebaseAuth
 import com.web.apps.core.auth.GoogleSignInHelper
-import com.web.apps.ui.navigation.WebAppsDestinations
 import com.web.apps.ui.navigation.WebAppsNavHost
 import com.web.apps.ui.theme.WebAppsTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -48,8 +40,8 @@ class MainActivity : ComponentActivity() {
             WebAppsTheme {
                 WebAppsNavHost(
                     initialContainerId = initialContainerId,
-                    onUpdateScreenActiveChanged = { active ->
-                        updateScreenActive.value = active
+                    onUpdateScreenActiveChanged = { isActive ->
+                        isUpdateScreenActive = isActive
                     },
                     onGoogleSignInRequested = { webClientId ->
                         googleSignInHelper.initializeGoogleSignIn(this@MainActivity, webClientId)
