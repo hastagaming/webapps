@@ -25,8 +25,8 @@ private const val MIN_PASSWORD_LENGTH = 6
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val googleSignInHelper: GoogleSignInHelper,
-    private val googleSignInResultBus: GoogleSignInResultBus
-    ApplicationContext private val appContext: android.content.Context
+    private val googleSignInResultBus: GoogleSignInResultBus,
+    @ApplicationContext private val appContext: android.content.Context
 ) : ViewModel() {
 
     init {
