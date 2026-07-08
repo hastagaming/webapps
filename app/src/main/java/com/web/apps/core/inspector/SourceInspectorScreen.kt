@@ -68,7 +68,10 @@ fun SourceInspectorScreen(
             )
         }
     ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
+        Column(modifier = Modifier
+                   .fillMaxSize()
+                   .padding(paddingValues)
+        ) {
             TabRow(selectedTabIndex = selectedTab) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
