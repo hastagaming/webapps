@@ -1,6 +1,7 @@
 ## WebApps
 
 ---
+## LICENSE
 
 [![License: GPLV3.0](https://img.shields.io/badge/LICENSE-GPLV3.0-red?style=plastic&logo=gplv3&logoColor=%23BD0000)](./LICENSE)
 
@@ -45,8 +46,6 @@ A production-ready, multi-container web browser for Android. WebApps lets you ru
 
 ## Requirements
 
-- Android Studio (latest stable release recommended)
-- JDK 17
 - An Android device or emulator running Android 8.0 (API 26) or higher
 
 ## Project Structure
@@ -84,6 +83,3 @@ app/src/main/java/com/web/apps/
 - All PINs are hashed with SHA-256 before being stored; the raw PIN is never persisted.
 - Encrypted backups use AES-256-GCM keys generated and stored inside the Android Keystore, so the encryption key never leaves secure hardware-backed storage where available.
 - Dangerous Website Protection blocks known malicious domains and detects suspicious non-Latin homograph characters in hostnames.
-
-## License
-see the license on [LICENSE](./LICENSE) File
