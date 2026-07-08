@@ -4,6 +4,9 @@ package com.web.apps.ui.containerlist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -236,22 +239,38 @@ private fun GroupSection(
             Text(text = groupName, style = MaterialTheme.typography.titleMedium)
         }
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
+        val allItems: List<ContainerEntity?> = containers + listOf(null)
+        val rows = allItems.chunked(3)
+
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp)
         ) {
-            items(containers, key = { it.containerId }) { container ->
-                ContainerTile(
-                    container = container,
-                    onClick = { onContainerClick(container.containerId) },
-                    onRefresh = { onRefresh(container.containerId) },
-                    onStop = { onStop(container.containerId) },
-                    onDelete = { onDelete(container) },
-                    onOpenLockSettings = { onOpenLockSettings(container.containerId) }
-                )
+            rows.forEach { rowItems ->
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    rowItems.forEach { container ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            if (container != null) {
+                                ContainerTile(
+                                    container = container,
+                                    onClick = { onContainerClick(container.containerId) },
+                                    onRefresh = { onRefresh(container.containerId) },
+                                    onStop = { onStop(container.containerId) },
+                                    onDelete = { onDelete(container) },
+                                    onOpenLockSettings = { onOpenLockSettings(container.containerId) }
+                                )
+                            } else {
+                                AddContainerTile(onClick = onAddContainer)
+                            }
+                        }
+                    }
+                    repeat(3 - rowItems.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
             }
+        }
 
             item {
                 AddContainerTile(onClick = onAddContainer)
