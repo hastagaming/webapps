@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -74,7 +75,7 @@ fun ContainerListScreen(
                 title = { Text("WebApps") },
                 actions = {
                     IconButton(onClick = { onNavigateToBackup() }) {
-                        Icon(androidx.compose.material.icons.Icons.Filled.Backup, contentDescription = "Backup & Restore")
+                        Icon(androidx.compose.material.icons.Icons.Filled.CloudUpload, contentDescription = "Backup & Restore")
                     }
                     IconButton(onClick = {
                         com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
