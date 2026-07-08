@@ -272,11 +272,6 @@ private fun GroupSection(
             }
         }
 
-            item {
-                AddContainerTile(onClick = onAddContainer)
-            }
-        }
-
         if (onDeleteGroup != null) {
             TextButton(onClick = onDeleteGroup, modifier = Modifier.padding(start = 8.dp)) {
                 Text("Delete Grup", color = MaterialTheme.colorScheme.error)
