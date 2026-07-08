@@ -1,8 +1,10 @@
 name: Auto Tag Version
 
 on:
-  push:
-    branches: [ "main" ]
+  workflow_run:
+    workflows: ["Android CI"]
+    types:
+      - completed
   workflow_dispatch:
     inputs:
       bump_type:
@@ -21,6 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
 
     steps:
       - name: Checkout repository
@@ -28,6 +34,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.AUTO_TAG_PAT }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Determine next version tag
         id: next_version

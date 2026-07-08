@@ -73,8 +73,8 @@ fun ContainerListScreen(
             TopAppBar(
                 title = { Text("WebApps") },
                 actions = {
-                    IconButton(onClick = { /* navController.navigate(WebAppsDestinations.BACKUP) */ }) {
-                        Icon(androidx.compose.material.icons.Icons.Filled.Settings, contentDescription = "Backup & Restore")
+                    IconButton(onClick = { onNavigateToBackup() }) {
+                        Icon(androidx.compose.material.icons.Icons.Filled.CloudUpload, contentDescription = "Backup & Restore")
                     }
                     IconButton(onClick = {
                         com.google.firebase.auth.FirebaseAuth.getInstance().signOut()

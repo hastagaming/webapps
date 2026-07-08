@@ -12,10 +12,12 @@ class WebAppsApplication : Application() {
 
     companion object {
         const val CHANNEL_ID_CONTAINER_SERVICE = "container_notifications"
+        var appContextInstance: android.content.Context? = null
     }
 
     override fun onCreate() {
         super.onCreate()
+        appContextInstance = applicationContext
 
         Thread.setDefaultUncaughtExceptionHandler(CrashHandler(this))
 
