@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -237,34 +238,39 @@ private fun GroupSection(
             Text(text = groupName, style = MaterialTheme.typography.titleMedium)
         }
 
-        val allItems: List<ContainerEntity?> = containers + listOf(null)
-        val rows = allItems.chunked(3)
-
-        Column(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp)
         ) {
-            rows.forEach { rowItems ->
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    rowItems.forEach { container ->
-                        Box(modifier = Modifier.weight(1f)) {
-                            if (container != null) {
-                                ContainerTile(
-                                    container = container,
-                                    onClick = { onContainerClick(container.containerId) },
-                                    onRefresh = { onRefresh(container.containerId) },
-                                    onStop = { onStop(container.containerId) },
-                                    onDelete = { onDelete(container) },
-                                    onOpenLockSettings = { onOpenLockSettings(container.containerId) }
-                                )
-                            } else {
-                                AddContainerTile(onClick = onAddContainer)
+            val minTileWidth = 100.dp
+            val columnCount = (maxWidth / minTileWidth).toInt().coerceAtLeast(2)
+
+            val allItems: List<ContainerEntity?> = containers + listOf(null)
+            val rows = allItems.chunked(columnCount)
+
+            Column(modifier = Modifier.fillMaxWidth()) {
+                rows.forEach { rowItems ->
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        rowItems.forEach { container ->
+                            Box(modifier = Modifier.fillMaxWidth(1f / columnCount)) {
+                                if (container != null) {
+                                    ContainerTile(
+                                        container = container,
+                                        onClick = { onContainerClick(container.containerId) },
+                                        onRefresh = { onRefresh(container.containerId) },
+                                        onStop = { onStop(container.containerId) },
+                                        onDelete = { onDelete(container) },
+                                        onOpenLockSettings = { onOpenLockSettings(container.containerId) }
+                                    )
+                                } else {
+                                    AddContainerTile(onClick = onAddContainer)
+                                }
                             }
                         }
-                    }
-                    repeat(3 - rowItems.size) {
-                        Spacer(modifier = Modifier.weight(1f))
+                        repeat(columnCount - rowItems.size) {
+                            Spacer(modifier = Modifier.fillMaxWidth(1f / columnCount))
+                        }
                     }
                 }
             }
