@@ -2,12 +2,18 @@
 
 package com.web.apps.ui.containerlist
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import java.io.File
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,6 +55,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -207,7 +214,7 @@ fun ContainerListScreen(
 
     if (uiState.showAddGroupDialog) {
         AddGroupDialog(
-            onConfirm = { name, color -> viewModel.onEvent(ContainerListEvent.CreateGroup(name, color)) },
+            onConfirm = { name, color, iconUri -> viewModel.onEvent(ContainerListEvent.CreateGroup(name, color, iconUri)) },
             onDismiss = { viewModel.onEvent(ContainerListEvent.DismissAddGroupDialog) }
         )
     }
@@ -308,18 +315,19 @@ private fun ContainerTile(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(8.dp),
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                coil.compose.AsyncImage(
+                    model = "https://www.google.com/s2/favicons?sz=64&domain=${android.net.Uri.parse(container.url).host}",
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = container.name,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 2
-                )
-                Text(
-                    text = container.url,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -437,15 +445,28 @@ private fun AddContainerDialog(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddGroupDialog(
-    onConfirm: (name: String, colorHex: String) -> Unit,
+    onConfirm: (name: String, colorHex: String, iconUri: String?) -> Unit,
     onDismiss: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     val presetColors = listOf("#2196F3", "#4CAF50", "#FF9800", "#E91E63", "#9C27B0")
     var selectedColor by remember { mutableStateOf(presetColors.first()) }
+    var pickedIconPath by remember { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            val savedPath = copyImageToInternalStorage(context, uri)
+            if (savedPath != null) {
+                pickedIconPath = savedPath
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -458,7 +479,37 @@ private fun AddGroupDialog(
                     label = { Text("Group Name") },
                     singleLine = true
                 )
-                Column(modifier = Modifier.padding(top = 8.dp)) {
+
+                Column(modifier = Modifier.padding(top = 12.dp)) {
+                    Text("Group Icon (optional)")
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 4.dp)
+                            .aspectRatio(1f)
+                            .fillMaxWidth(0.35f)
+                            .background(
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .combinedClickable(
+                                onClick = { imagePickerLauncher.launch("image/*") },
+                                onLongClick = {}
+                            ),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    ) {
+                        if (pickedIconPath != null) {
+                            AsyncImage(
+                                model = File(pickedIconPath!!),
+                                contentDescription = "Selected group icon",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Icon(Icons.Filled.Add, contentDescription = "Pick icon")
+                        }
+                    }
+                }
+
+                Column(modifier = Modifier.padding(top = 12.dp)) {
                     Text("Pick a Color")
                     androidx.compose.foundation.layout.Row(
                         modifier = Modifier.padding(top = 4.dp),
@@ -480,7 +531,7 @@ private fun AddGroupDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { if (name.isNotBlank()) onConfirm(name, selectedColor) }) {
+            TextButton(onClick = { if (name.isNotBlank()) onConfirm(name, selectedColor, pickedIconPath) }) {
                 Text("Create")
             }
         },
@@ -488,4 +539,24 @@ private fun AddGroupDialog(
             TextButton(onClick = onDismiss) { Text("cancelle") }
         }
     )
+}
+
+private fun copyImageToInternalStorage(context: android.content.Context, uri: android.net.Uri): String? {
+    return try {
+        val iconsDir = File(context.filesDir, "group_icons")
+        if (!iconsDir.exists()) iconsDir.mkdirs()
+
+        val fileName = "icon_${System.currentTimeMillis()}.png"
+        val destFile = File(iconsDir, fileName)
+
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            destFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        destFile.absolutePath
+    } catch (e: Exception) {
+        null
+    }
 }

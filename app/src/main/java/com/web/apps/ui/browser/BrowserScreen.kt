@@ -90,16 +90,6 @@ fun BrowserScreen(
                             )
                         }
                         IconButton(onClick = {
-                            uiState.container?.let { container ->
-                                recoveryViewModel.triggerManualRecovery(container.containerId)
-                            }
-                        }) {
-                            Icon(
-                                androidx.compose.material.icons.Icons.Filled.Refresh,
-                                contentDescription = "Force Recovery"
-                            )
-                        }
-                        IconButton(onClick = {
                             uiState.container?.let { onNavigateToPermissionManager(it.containerId) }
                         }) {
                             Icon(
@@ -139,7 +129,7 @@ fun BrowserScreen(
                 if (container != null && !uiState.isLocked) {
                     AndroidView(
                         factory = { context ->
-                            containerManager.getOrCreateSession(
+                            val webView = containerManager.getOrCreateSession(
                                 context = context,
                                 container = container,
                                 onFaviconReceived = { _, bitmap -> viewModel.updateFavicon(bitmap) },
@@ -151,6 +141,9 @@ fun BrowserScreen(
                                 onShowCustomView = { },
                                 onHideCustomView = { }
                             ).webView
+
+                            (webView.parent as? android.view.ViewGroup)?.removeView(webView)
+                            webView
                         },
                         modifier = Modifier.fillMaxSize()
                     )

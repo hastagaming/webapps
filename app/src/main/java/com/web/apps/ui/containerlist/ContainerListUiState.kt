@@ -23,7 +23,7 @@ sealed class ContainerListEvent {
     object OpenAddGroupDialog : ContainerListEvent()
     object DismissAddGroupDialog : ContainerListEvent()
     data class CreateContainer(val name: String, val url: String, val groupId: Long?) : ContainerListEvent()
-    data class CreateGroup(val name: String, val colorHex: String) : ContainerListEvent()
+    data class CreateGroup(val name: String, val colorHex: String, val iconUri: String? = null) : ContainerListEvent()
     data class DeleteContainer(val container: ContainerEntity) : ContainerListEvent()
     data class DeleteGroup(val group: GroupEntity) : ContainerListEvent()
     data class RefreshContainer(val containerId: Long) : ContainerListEvent()

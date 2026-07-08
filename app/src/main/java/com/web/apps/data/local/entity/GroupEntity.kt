@@ -9,6 +9,7 @@ data class GroupEntity(
     val groupId: Long = 0,
     val name: String,
     val colorHex: String = "#2196F3",
+    val iconUri: String? = null,
     val position: Int = 0,
     val createdAt: Long = System.currentTimeMillis()
 )

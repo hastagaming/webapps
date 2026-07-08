@@ -67,7 +67,7 @@ class ContainerListViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(showAddGroupDialog = false)
             }
             is ContainerListEvent.CreateContainer -> createContainer(event.name, event.url, event.groupId)
-            is ContainerListEvent.CreateGroup -> createGroup(event.name, event.colorHex)
+            is ContainerListEvent.CreateGroup -> createGroup(event.name, event.colorHex, event.iconUri)
             is ContainerListEvent.DeleteContainer -> deleteContainer(event)
             is ContainerListEvent.DeleteGroup -> deleteGroup(event)
             is ContainerListEvent.RefreshContainer -> serviceController.refreshContainer(event.containerId)
@@ -95,7 +95,8 @@ class ContainerListViewModel @Inject constructor(
     private fun createContainer(name: String, url: String, groupId: Long?) {
         viewModelScope.launch {
             try {
-                containerRepository.createContainer(name = name, url = url, groupId = groupId)
+                val newContainerId = containerRepository.createContainer(name = name, url = url, groupId = groupId)
+                serviceController.openContainer(newContainerId)
                 _uiState.value = _uiState.value.copy(showAddContainerDialog = false, errorMessage = null)
             } catch (e: IllegalArgumentException) {
                 _uiState.value = _uiState.value.copy(errorMessage = e.message)
@@ -103,9 +104,9 @@ class ContainerListViewModel @Inject constructor(
         }
     }
 
-    private fun createGroup(name: String, colorHex: String) {
+    private fun createGroup(name: String, colorHex: String, iconUri: String?) {
         viewModelScope.launch {
-            groupRepository.createGroup(name = name, colorHex = colorHex)
+            groupRepository.createGroup(name = name, colorHex = colorHex, iconUri = iconUri)
             _uiState.value = _uiState.value.copy(showAddGroupDialog = false)
         }
     }

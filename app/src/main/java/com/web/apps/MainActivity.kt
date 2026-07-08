@@ -36,17 +36,17 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
 
+        val webClientId = getString(R.string.default_web_client_id)
+        googleSignInHelper.initializeGoogleSignIn(this, webClientId)
+
         val initialContainerId = intent.getLongExtra("EXTRA_CONTAINER_ID", -1L).takeIf { it != -1L }
 
         setContent {
             WebAppsTheme {
                 WebAppsNavHost(
                     initialContainerId = initialContainerId,
-                    onUpdateScreenActiveChanged = { isActive ->
-                        isUpdateScreenActive = isActive
-                    },
-                    onGoogleSignInRequested = { webClientId ->
-                        googleSignInHelper.initializeGoogleSignIn(this@MainActivity, webClientId)
+                    onUpdateScreenActiveChanged = { isActive -> isUpdateScreenActive = isActive },
+                    onGoogleSignInRequested = {
                         val intent = googleSignInHelper.getSignInIntent(this@MainActivity)
                         if (intent != null) {
                             googleSignInLauncher.launch(intent)

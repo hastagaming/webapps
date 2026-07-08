@@ -25,6 +25,7 @@ object DatabaseModule {
             WebAppsDatabase::class.java,
             WebAppsDatabase.DATABASE_NAME
         )
+            .addMigrations(*com.web.apps.data.local.database.DatabaseMigrations.getAllMigrations())
             .fallbackToDestructiveMigration()
             .build()
     }

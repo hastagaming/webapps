@@ -105,6 +105,13 @@ class LoginViewModel @Inject constructor(
     }
 
     fun handleGoogleSignInResult(data: android.content.Intent?) {
+        if (data == null) {
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                errorMessage = "No account signed in on this device."
+            )
+            return
+        }
         viewModelScope.launch {
             when (val result = googleSignInHelper.handleSignInResult(data)) {
                 is GoogleSignInResult.Success -> {
@@ -118,7 +125,10 @@ class LoginViewModel @Inject constructor(
                     )
                 }
                 is GoogleSignInResult.Cancelled -> {
-                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "No account signed in on this device."
+                    )
                 }
             }
         }

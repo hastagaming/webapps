@@ -15,11 +15,12 @@ class GroupRepository @Inject constructor(
 
     suspend fun getGroupById(groupId: Long): GroupEntity? = groupDao.getGroupById(groupId)
 
-    suspend fun createGroup(name: String, colorHex: String): Long {
+    suspend fun createGroup(name: String, colorHex: String, iconUri: String? = null): Long {
         val position = groupDao.countGroups()
         val group = GroupEntity(
             name = name,
             colorHex = colorHex,
+            iconUri = iconUri,
             position = position
         )
         return groupDao.insertGroup(group)
