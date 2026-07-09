@@ -8,8 +8,8 @@ import com.web.apps.data.local.entity.ContainerEntity
 import com.web.apps.data.local.entity.GroupEntity
 import com.web.apps.data.local.entity.OrientationMode
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

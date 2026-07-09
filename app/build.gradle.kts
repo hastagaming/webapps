@@ -106,7 +106,9 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.6.0")
 
-    implementation("io.supabase:supabase-kt:1.1.1")
+    implementation(platform("io.github.jan-tennert.supabase:bom:2.6.1"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.ktor:ktor-client-android:2.3.12")
 
     implementation("androidx.glance:glance-appwidget:1.1.1")
 }
