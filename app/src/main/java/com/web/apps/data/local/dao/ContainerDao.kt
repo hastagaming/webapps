@@ -40,6 +40,9 @@ interface ContainerDao {
     @Query("SELECT * FROM containers WHERE name LIKE '%' || :query || '%' OR url LIKE '%' || :query || '%' ORDER BY position ASC")
     fun searchContainers(query: String): Flow<List<ContainerEntity>>
 
+    @Query("SELECT * FROM containers")
+    suspend fun getAllContainersOnce(): List<ContainerEntity>
+
     @Query("UPDATE containers SET lastAccessedAt = :timestamp WHERE containerId = :containerId")
     suspend fun updateLastAccessed(containerId: Long, timestamp: Long = System.currentTimeMillis())
 

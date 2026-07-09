@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -40,6 +41,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -77,6 +79,7 @@ fun ContainerListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var fabMenuExpanded by remember { mutableStateOf(false) }
+    var containerForGroupMove by remember { mutableStateOf<ContainerEntity?>(null) }
 
     Scaffold(
         topBar = {
@@ -163,12 +166,21 @@ fun ContainerListScreen(
                                 onContainerClick = onContainerClick,
                                 onRefresh = { viewModel.onEvent(ContainerListEvent.RefreshContainer(it)) },
                                 onStop = { viewModel.onEvent(ContainerListEvent.StopContainer(it)) },
+                                onMoveUp = { viewModel.onEvent(ContainerListEvent.MoveContainerUp(it)) },
+                                onMoveDown = { viewModel.onEvent(ContainerListEvent.MoveContainerDown(it)) },
+                                onRequestMoveToGroup = { container -> containerForGroupMove = container },
+                                onToggleNotification = { containerId, enabled ->
+                                    viewModel.onEvent(ContainerListEvent.ToggleNotification(containerId, enabled))
+                                },
                                 onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
                                 onAddContainer = {
                                     viewModel.onEvent(ContainerListEvent.OpenAddContainerDialog(groupId = null))
                                 },
                                 onOpenLockSettings = { containerId ->
                                     onNavigateToLockSettings(containerId)
+                                },
+                                onChangeIcon = { containerId, path ->
+                                    viewModel.onEvent(ContainerListEvent.ChangeContainerIcon(containerId, path))
                                 }
                             )
                         }
@@ -182,6 +194,9 @@ fun ContainerListScreen(
                             onContainerClick = onContainerClick,
                             onRefresh = { viewModel.onEvent(ContainerListEvent.RefreshContainer(it)) },
                             onStop = { viewModel.onEvent(ContainerListEvent.StopContainer(it)) },
+                            onMoveUp = { viewModel.onEvent(ContainerListEvent.MoveContainerUp(it)) },
+                                onMoveDown = { viewModel.onEvent(ContainerListEvent.MoveContainerDown(it)) },
+                                onRequestMoveToGroup = { container -> containerForGroupMove = container },
                             onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
                             onAddContainer = {
                                 viewModel.onEvent(ContainerListEvent.OpenAddContainerDialog(groupId = group.groupId))
@@ -189,7 +204,10 @@ fun ContainerListScreen(
                             onOpenLockSettings = { containerId ->
                                 onNavigateToLockSettings(containerId)
                             },
-                            onDeleteGroup = { viewModel.onEvent(ContainerListEvent.DeleteGroup(group)) }
+                            onDeleteGroup = { viewModel.onEvent(ContainerListEvent.DeleteGroup(group)) },
+                            onChangeIcon = { containerId, path ->
+                                    viewModel.onEvent(ContainerListEvent.ChangeContainerIcon(containerId, path))
+                            }
                         )
                     }
                 }
@@ -219,6 +237,39 @@ fun ContainerListScreen(
             onDismiss = { viewModel.onEvent(ContainerListEvent.DismissAddGroupDialog) }
         )
     }
+
+    val moveTarget = containerForGroupMove
+    if (moveTarget != null) {
+        AlertDialog(
+            onDismissRequest = { containerForGroupMove = null },
+            title = { Text("Move to Group") },
+            text = {
+                Column {
+                    ListItem(
+                        headlineContent = { Text("No Group") },
+                        modifier = Modifier.clickable {
+                            viewModel.onEvent(ContainerListEvent.MoveContainerToGroup(moveTarget.containerId, null))
+                            containerForGroupMove = null
+                        }
+                    )
+                    uiState.groups.forEach { group ->
+                        ListItem(
+                            headlineContent = { Text(group.name) },
+                            modifier = Modifier.clickable {
+                                viewModel.onEvent(ContainerListEvent.MoveContainerToGroup(moveTarget.containerId, group.groupId))
+                                containerForGroupMove = null
+                            }
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { containerForGroupMove = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -232,6 +283,10 @@ private fun GroupSection(
     onDelete: (com.web.apps.data.local.entity.ContainerEntity) -> Unit,
     onAddContainer: () -> Unit,
     onOpenLockSettings: (Long) -> Unit,
+    onChangeIcon: (Long, String) -> Unit,
+    onMoveUp: (Long) -> Unit,
+    onMoveDown: (Long) -> Unit,
+    onRequestMoveToGroup: (com.web.apps.data.local.entity.ContainerEntity) -> Unit,
     onDeleteGroup: (() -> Unit)? = null
 ) {
 
@@ -267,8 +322,15 @@ private fun GroupSection(
                                         onClick = { onContainerClick(container.containerId) },
                                         onRefresh = { onRefresh(container.containerId) },
                                         onStop = { onStop(container.containerId) },
+                                        onToggleNotification = { enabled ->
+                                             onToggleNotification(container.containerId, enabled)
+                                        },
                                         onDelete = { onDelete(container) },
-                                        onOpenLockSettings = { onOpenLockSettings(container.containerId) }
+                                        onOpenLockSettings = { onOpenLockSettings(container.containerId) },
+                                        onChangeIcon = { path -> onChangeIcon(container.containerId, path) },
+                                        onMoveUp = { onMoveUp(container.containerId) },
+                                        onMoveDown = { onMoveDown(container.containerId) },
+                                        onRequestMoveToGroup = { onRequestMoveToGroup(container) }
                                     )
                                 } else {
                                     AddContainerTile(onClick = onAddContainer)
@@ -298,10 +360,27 @@ private fun ContainerTile(
     onClick: () -> Unit,
     onRefresh: () -> Unit,
     onStop: () -> Unit,
+    onToggleNotification: (Boolean) -> Unit,
     onDelete: () -> Unit,
-    onOpenLockSettings: () -> Unit
+    onOpenLockSettings: () -> Unit,
+    onChangeIcon: (String) -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    onRequestMoveToGroup: () -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val iconPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            val savedPath = copyContainerIconToInternalStorage(context, uri)
+            if (savedPath != null) {
+                onChangeIcon(savedPath)
+            }
+        }
+    }
 
     Box(modifier = Modifier.padding(4.dp)) {
         Card(
@@ -317,18 +396,32 @@ private fun ContainerTile(
                     .fillMaxSize()
                     .padding(8.dp),
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
             ) {
-                coil.compose.AsyncImage(
-                    model = "https://www.google.com/s2/favicons?sz=64&domain=${android.net.Uri.parse(container.url).host}",
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
+                if (container.faviconLocalPath != null) {
+                    AsyncImage(
+                        model = File(container.faviconLocalPath),
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp)
+                    )
+                } else {
+                    AsyncImage(
+                        model = "https://www.google.com/s2/favicons?sz=64&domain=${android.net.Uri.parse(container.url).host}",
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+                androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = container.name,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 2
+                )
+                Text(
+                    text = container.url,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -343,6 +436,26 @@ private fun ContainerTile(
                 onClick = { menuExpanded = false; onStop() }
             )
             DropdownMenuItem(
+                text = { Text("Change Icon") },
+                onClick = { menuExpanded = false; iconPickerLauncher.launch("image/*") }
+            )
+            DropdownMenuItem(
+                text = { Text("Move Up") },
+                onClick = { menuExpanded = false; onMoveUp() }
+            )
+            DropdownMenuItem(
+                text = { Text("Move Down") },
+                onClick = { menuExpanded = false; onMoveDown() }
+            )
+            DropdownMenuItem(
+                text = { Text("Move to Group") },
+                onClick = { menuExpanded = false; onRequestMoveToGroup() }
+            )
+            DropdownMenuItem(
+                text = { Text(if (container.isNotificationEnabled) "Disable Notifications" else "Enable Notifications") },
+                onClick = { menuExpanded = false; onToggleNotification(!container.isNotificationEnabled) }
+            )
+            DropdownMenuItem(
                 text = { Text("Delete") },
                 onClick = { menuExpanded = false; onDelete() }
             )
@@ -351,6 +464,26 @@ private fun ContainerTile(
                 onClick = { menuExpanded = false; onOpenLockSettings() }
             )
         }
+    }
+}
+
+private fun copyContainerIconToInternalStorage(context: android.content.Context, uri: android.net.Uri): String? {
+    return try {
+        val iconsDir = File(context.filesDir, "container_icons")
+        if (!iconsDir.exists()) iconsDir.mkdirs()
+
+        val fileName = "icon_${System.currentTimeMillis()}.png"
+        val destFile = File(iconsDir, fileName)
+
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            destFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        destFile.absolutePath
+    } catch (e: Exception) {
+        null
     }
 }
 
@@ -402,7 +535,17 @@ private fun SearchResultsList(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+private enum class ContainerInputMode { URL, SEARCH }
+
+private data class SearchEngineOption(val label: String, val urlTemplate: String)
+
+private val SEARCH_ENGINE_OPTIONS = listOf(
+    SearchEngineOption("Google", "https://www.google.com/search?q="),
+    SearchEngineOption("Bing", "https://www.bing.com/search?q="),
+    SearchEngineOption("DuckDuckGo", "https://duckduckgo.com/?q="),
+    SearchEngineOption("Yahoo", "https://search.yahoo.com/search?p=")
+)
+
 @Composable
 private fun AddContainerDialog(
     onConfirm: (name: String, url: String) -> Unit,
@@ -410,7 +553,10 @@ private fun AddContainerDialog(
     errorMessage: String?
 ) {
     var name by remember { mutableStateOf("") }
-    var url by remember { mutableStateOf("") }
+    var inputValue by remember { mutableStateOf("") }
+    var inputMode by remember { mutableStateOf(ContainerInputMode.URL) }
+    var selectedEngine by remember { mutableStateOf(SEARCH_ENGINE_OPTIONS.first()) }
+    var engineMenuExpanded by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -423,20 +569,80 @@ private fun AddContainerDialog(
                     label = { Text("Name") },
                     singleLine = true
                 )
+
+                androidx.compose.foundation.layout.Row(
+                    modifier = Modifier.padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    androidx.compose.material3.FilterChip(
+                        selected = inputMode == ContainerInputMode.URL,
+                        onClick = { inputMode = ContainerInputMode.URL },
+                        label = { Text("URL") }
+                    )
+                    androidx.compose.material3.FilterChip(
+                        selected = inputMode == ContainerInputMode.SEARCH,
+                        onClick = { inputMode = ContainerInputMode.SEARCH },
+                        label = { Text("Search Query") }
+                    )
+                }
+
+                if (inputMode == ContainerInputMode.SEARCH) {
+                    Box(modifier = Modifier.padding(top = 8.dp)) {
+                        OutlinedTextField(
+                            value = selectedEngine.label,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Search Engine") },
+                            singleLine = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .combinedClickable(
+                                    onClick = { engineMenuExpanded = true },
+                                    onLongClick = {}
+                                )
+                        )
+                        DropdownMenu(
+                            expanded = engineMenuExpanded,
+                            onDismissRequest = { engineMenuExpanded = false }
+                        ) {
+                            SEARCH_ENGINE_OPTIONS.forEach { engine ->
+                                DropdownMenuItem(
+                                    text = { Text(engine.label) },
+                                    onClick = {
+                                        selectedEngine = engine
+                                        engineMenuExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
                 OutlinedTextField(
-                    value = url,
-                    onValueChange = { url = it },
-                    label = { Text("URL") },
+                    value = inputValue,
+                    onValueChange = { inputValue = it },
+                    label = { Text(if (inputMode == ContainerInputMode.URL) "URL" else "Search Keywords") },
                     singleLine = true,
                     modifier = Modifier.padding(top = 8.dp)
                 )
+
                 if (errorMessage != null) {
                     Text(errorMessage, color = MaterialTheme.colorScheme.error)
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = { if (name.isNotBlank() && url.isNotBlank()) onConfirm(name, url) }) {
+            TextButton(onClick = {
+                if (name.isNotBlank() && inputValue.isNotBlank()) {
+                    val finalUrl = if (inputMode == ContainerInputMode.URL) {
+                        inputValue
+                    } else {
+                        val encodedQuery = java.net.URLEncoder.encode(inputValue, "UTF-8")
+                        selectedEngine.urlTemplate + encodedQuery
+                    }
+                    onConfirm(name, finalUrl)
+                }
+            }) {
                 Text("Create")
             }
         },
@@ -537,7 +743,7 @@ private fun AddGroupDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("cancelle") }
+            TextButton(onClick = onDismiss) { Text("cancell") }
         }
     )
 }

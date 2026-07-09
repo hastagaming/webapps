@@ -49,6 +49,7 @@ class ContainerManager @Inject constructor(
                 onPageFinished(container.containerId, url)
                 managerScope.launch {
                     containerRepository.markAccessed(container.containerId)
+                    containerRepository.incrementOpenCount(container.containerId)
                 }
             },
             onDangerousSiteDetected = { url ->

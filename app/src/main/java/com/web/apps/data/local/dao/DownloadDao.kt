@@ -40,6 +40,15 @@ interface DownloadDao {
     @Query("UPDATE downloads SET downloadedBytes = :downloadedBytes, updatedAt = :timestamp WHERE downloadId = :downloadId")
     suspend fun updateProgress(downloadId: Long, downloadedBytes: Long, timestamp: Long = System.currentTimeMillis())
 
+    @Query("UPDATE containers SET openCount = openCount + 1 WHERE containerId = :containerId")
+    suspend fun incrementOpenCount(containerId: Long)
+
+    @Query("UPDATE containers SET totalUsageMillis = totalUsageMillis + :millis WHERE containerId = :containerId")
+    suspend fun addUsageMillis(containerId: Long, millis: Long)
+
+    @Query("UPDATE containers SET isNotificationEnabled = :enabled WHERE containerId = :containerId")
+    suspend fun updateNotificationEnabled(containerId: Long, enabled: Boolean)
+
     @Query("UPDATE downloads SET localFilePath = :path, status = :status, updatedAt = :timestamp WHERE downloadId = :downloadId")
     suspend fun completeDownload(
         downloadId: Long,

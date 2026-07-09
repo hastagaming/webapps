@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.launchIn
 import com.web.apps.core.auth.GoogleSignInHelper
 import com.web.apps.core.auth.GoogleSignInResult
+import com.web.apps.core.sync.SupabaseSyncManager
 import com.web.apps.data.repository.AuthRepository
 import com.web.apps.data.repository.AuthResult
 import com.web.apps.data.repository.PasswordResetResult
@@ -26,6 +27,7 @@ class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val googleSignInHelper: GoogleSignInHelper,
     private val googleSignInResultBus: GoogleSignInResultBus,
+    private val supabaseSyncManager: SupabaseSyncManager,
     @ApplicationContext private val appContext: android.content.Context
 ) : ViewModel() {
 
@@ -139,11 +141,14 @@ class LoginViewModel @Inject constructor(
         when (result) {
             is AuthResult.Success -> {
                 com.web.apps.core.crash.DebugLogger.log(appContext, "WebAppsAuth", "Success! User: ${result.user.email}")
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    isAuthenticated = true,
-                    errorMessage = null
-                )
+                viewModelScope.launch {
+                    supabaseSyncManager.pullAndMergeAll()
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isAuthenticated = true,
+                        errorMessage = null
+                    )
+                }
             }
             is AuthResult.Failure -> {
                 com.web.apps.core.crash.DebugLogger.log(appContext, "WebAppsAuth", "Failure: ${result.message}")

@@ -22,7 +22,8 @@ class ContainerWebViewFactory @Inject constructor(
     private val permissionManager: ContainerPermissionManager,
     private val safeBrowsingChecker: SafeBrowsingChecker,
     private val sourceInspectorManager: SourceInspectorManager,
-    private val recoveryManager: RecoveryManager
+    private val recoveryManager: RecoveryManager,
+    private val notificationHelper: com.web.apps.core.notification.ContainerNotificationHelper
 ) {
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -48,6 +49,23 @@ class ContainerWebViewFactory @Inject constructor(
             setAcceptThirdPartyCookies(webView, true)
         }
 
+        if (container.isNotificationEnabled) {
+            webView.addJavascriptInterface(
+                object {
+                    @android.webkit.JavascriptInterface
+                    fun onTitleChanged(newTitle: String) {
+                        notificationHelper.showUnreadNotification(
+                            context = context,
+                            containerId = container.containerId,
+                            containerName = container.name,
+                            title = newTitle
+                        )
+                    }
+                },
+                "AndroidTitleWatcher"
+            )
+        }
+
         webView.webViewClient = WebAppsWebViewClient(
             safeBrowsingChecker = safeBrowsingChecker,
             allowHttp = container.isHttpAllowed,
@@ -58,6 +76,24 @@ class ContainerWebViewFactory @Inject constructor(
             onPageFinished = { url ->
                 recoveryManager.onPageLoadFinished(container.containerId)
                 onPageFinished(url)
+
+                if (container.isNotificationEnabled) {
+                    webView.evaluateJavascript(
+                        """
+                        (function() {
+                            if (window.__webappsTitleObserverInstalled) return;
+                            window.__webappsTitleObserverInstalled = true;
+                            var target = document.querySelector('title');
+                            if (!target) return;
+                            var observer = new MutationObserver(function() {
+                                AndroidTitleWatcher.onTitleChanged(document.title);
+                            });
+                            observer.observe(target, { childList: true });
+                        })();
+                        """.trimIndent(),
+                        null
+                    )
+                }
             },
             onDangerousSiteDetected = onDangerousSiteDetected,
             onHttpBlocked = onHttpBlocked,

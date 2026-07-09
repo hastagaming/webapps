@@ -1,10 +1,19 @@
 ## WebApps
 
 ---
-## LICENSE
 
-[![License: GPLV3.0](https://img.shields.io/badge/LICENSE-GPLV3.0-red?style=plastic&logo=gplv3&logoColor=%23BD0000)](./LICENSE)
+<p align="center">
+  <img src="image/WebApps.png">
+</p>
 
+</p align="center"><sub>Secure and best way to enjoy a web.</sub></p>
+
+<div align="center">
+  <p>
+    <img src="https://img.shields.io/badge/LICENSE-GPLV3.0-red?style=plastic&logo=gplv3&logoColor=%23BD0000" alt="License">
+
+  </p>
+</div>
 ![GitHub Release](https://img.shields.io/github/v/release/hastagaming/webapps?sort=date&display_name=release&style=plastic&logo=github&logoSize=amd)![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hastagaming/webapps/android-ci.yml?branch=main&style=plastic&logo=github&logoSize=amd)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/hastagaming/webapps/total?style=plastic&label=downloads)![GitHub top language](https://img.shields.io/github/languages/top/hastagaming/webapps?style=plastic)
 

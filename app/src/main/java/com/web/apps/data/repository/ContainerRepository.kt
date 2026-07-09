@@ -1,17 +1,24 @@
 package com.web.apps.data.repository
 
+import com.web.apps.core.sync.SupabaseSyncManager
 import com.web.apps.data.local.dao.ContainerDao
 import com.web.apps.data.local.entity.ContainerEntity
 import com.web.apps.data.local.entity.OrientationMode
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ContainerRepository @Inject constructor(
-    private val containerDao: ContainerDao
+    private val containerDao: ContainerDao,
+    private val supabaseSyncManager: SupabaseSyncManager
 ) {
+    private val syncScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     fun observeAllContainers(): Flow<List<ContainerEntity>> = containerDao.observeAllContainers()
 
@@ -26,6 +33,14 @@ class ContainerRepository @Inject constructor(
 
     fun searchContainers(query: String): Flow<List<ContainerEntity>> =
         containerDao.searchContainers(query)
+
+    fun incrementOpenCount(containerId: Long) {
+        syncScope.launch { containerDao.incrementOpenCount(containerId) }
+    }
+
+    fun addUsageMillis(containerId: Long, millis: Long) {
+        syncScope.launch { containerDao.addUsageMillis(containerId, millis) }
+    }
 
     suspend fun getContainerById(containerId: Long): ContainerEntity? =
         containerDao.getContainerById(containerId)
@@ -43,45 +58,75 @@ class ContainerRepository @Inject constructor(
             groupId = groupId,
             position = position
         )
-        return containerDao.insertContainer(container)
+        val newId = containerDao.insertContainer(container)
+        syncScope.launch { supabaseSyncManager.pushContainer(container.copy(containerId = newId)) }
+        return newId
     }
 
     suspend fun updateContainer(container: ContainerEntity) {
-        containerDao.updateContainer(
-            container.copy(updatedAt = System.currentTimeMillis())
-        )
+        val updated = container.copy(updatedAt = System.currentTimeMillis())
+        containerDao.updateContainer(updated)
+        syncScope.launch { supabaseSyncManager.pushContainer(updated) }
     }
 
     suspend fun deleteContainer(container: ContainerEntity) {
         containerDao.deleteContainer(container)
+        syncScope.launch { supabaseSyncManager.deleteContainerRemote(container.supabaseId) }
     }
 
     suspend fun markAccessed(containerId: Long) {
         containerDao.updateLastAccessed(containerId)
     }
 
+    suspend fun setNotificationEnabled(containerId: Long, enabled: Boolean) {
+        containerDao.updateNotificationEnabled(containerId, enabled)
+        containerDao.getContainerById(containerId)?.let { c ->
+            syncScope.launch { supabaseSyncManager.pushContainer(c) }
+        }
+    }
+
+    suspend fun getAllContainersOnce(): List<ContainerEntity> = containerDao.getAllContainersOnce()
+
     suspend fun updateFavicon(containerId: Long, faviconUrl: String?, localPath: String?) {
         containerDao.updateFavicon(containerId, faviconUrl, localPath)
+        containerDao.getContainerById(containerId)?.let { c ->
+            syncScope.launch { supabaseSyncManager.pushContainer(c) }
+        }
     }
 
     suspend fun setDesktopMode(containerId: Long, enabled: Boolean) {
         containerDao.updateDesktopMode(containerId, enabled)
+        containerDao.getContainerById(containerId)?.let { c ->
+            syncScope.launch { supabaseSyncManager.pushContainer(c) }
+        }
     }
 
     suspend fun setOrientationMode(containerId: Long, mode: OrientationMode) {
         containerDao.updateOrientationMode(containerId, mode)
+        containerDao.getContainerById(containerId)?.let { c ->
+            syncScope.launch { supabaseSyncManager.pushContainer(c) }
+        }
     }
 
     suspend fun setKeepAlive(containerId: Long, enabled: Boolean) {
         containerDao.updateKeepAlive(containerId, enabled)
+        containerDao.getContainerById(containerId)?.let { c ->
+            syncScope.launch { supabaseSyncManager.pushContainer(c) }
+        }
     }
 
     suspend fun reorderContainer(containerId: Long, newPosition: Int) {
         containerDao.updatePosition(containerId, newPosition)
+        containerDao.getContainerById(containerId)?.let { c ->
+            syncScope.launch { supabaseSyncManager.pushContainer(c) }
+        }
     }
 
     suspend fun moveToGroup(containerId: Long, groupId: Long?) {
         containerDao.moveToGroup(containerId, groupId)
+        containerDao.getContainerById(containerId)?.let { c ->
+            syncScope.launch { supabaseSyncManager.pushContainer(c) }
+        }
     }
 
     suspend fun getKeepAliveContainers(): List<ContainerEntity> =

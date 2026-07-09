@@ -2,6 +2,8 @@ package com.web.apps
 
 import android.os.Bundle
 import android.view.KeyEvent
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -23,6 +25,9 @@ class MainActivity : ComponentActivity() {
     lateinit var googleSignInHelper: GoogleSignInHelper
 
     @Inject
+    lateinit var themePreferenceManager: com.web.apps.core.preferences.ThemePreferenceManager
+
+    @Inject
     lateinit var googleSignInResultBus: GoogleSignInResultBus
 
     private val googleSignInLauncher = registerForActivityResult(
@@ -42,7 +47,10 @@ class MainActivity : ComponentActivity() {
         val initialContainerId = intent.getLongExtra("EXTRA_CONTAINER_ID", -1L).takeIf { it != -1L }
 
         setContent {
-            WebAppsTheme {
+            val themeMode by themePreferenceManager.themeMode.collectAsState(
+                initial = com.web.apps.core.preferences.AppThemeMode.SYSTEM
+            )
+            WebAppsTheme(themeMode = themeMode) {
                 WebAppsNavHost(
                     initialContainerId = initialContainerId,
                     onUpdateScreenActiveChanged = { isActive -> isUpdateScreenActive = isActive },

@@ -27,6 +27,9 @@ interface GroupDao {
     @Query("SELECT * FROM groups WHERE groupId = :groupId LIMIT 1")
     suspend fun getGroupById(groupId: Long): GroupEntity?
 
+    @Query("SELECT * FROM groups")
+    suspend fun getAllGroupsOnce(): List<GroupEntity>
+
     @Query("UPDATE groups SET position = :newPosition WHERE groupId = :groupId")
     suspend fun updatePosition(groupId: Long, newPosition: Int)
 

@@ -30,6 +30,7 @@ object WebAppsDestinations {
     const val CONTAINER_LIST = "container_list"
     const val BROWSER = "browser/{containerId}"
     const val BACKUP = "backup"
+    const val STATISTICS = "statistics"
     const val CONTAINER_LOCK = "container_lock/{containerId}"
     const val SOURCE_INSPECTOR = "source_inspector/{containerId}"
     const val PERMISSION_MANAGER = "permission_manager/{containerId}"
@@ -126,6 +127,13 @@ fun WebAppsNavHost(
             )
         }
 
+        composable(WebAppsDestinations.STATISTICS) {
+            onUpdateScreenActiveChanged(false)
+            com.web.apps.ui.statistics.StatisticsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
         composable(
             route = WebAppsDestinations.CONTAINER_LOCK,
             arguments = listOf(navArgument("containerId") { type = NavType.LongType })
@@ -160,7 +168,8 @@ fun WebAppsNavHost(
             onUpdateScreenActiveChanged(false)
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToUpdate = { navController.navigate(WebAppsDestinations.UPDATE_SYSTEM) }
+                onNavigateToUpdate = { navController.navigate(WebAppsDestinations.UPDATE_SYSTEM) },
+                onNavigateToStatistics = { navController.navigate(WebAppsDestinations.STATISTICS) }
             )
         }
 

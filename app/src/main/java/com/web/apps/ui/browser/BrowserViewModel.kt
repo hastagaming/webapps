@@ -23,12 +23,21 @@ class BrowserViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val containerId: Long = checkNotNull(savedStateHandle["containerId"])
+    private val sessionStartTime: Long = System.currentTimeMillis()
 
     private val _uiState = MutableStateFlow(BrowserUiState())
     val uiState: StateFlow<BrowserUiState> = _uiState.asStateFlow()
 
     init {
         observeContainer()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        val elapsed = System.currentTimeMillis() - sessionStartTime
+        if (elapsed > 0) {
+            containerRepository.addUsageMillis(containerId, elapsed)
+        }
     }
 
     private fun observeContainer() {

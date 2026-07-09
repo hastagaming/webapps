@@ -69,11 +69,15 @@ class ContainerListViewModel @Inject constructor(
             is ContainerListEvent.CreateContainer -> createContainer(event.name, event.url, event.groupId)
             is ContainerListEvent.CreateGroup -> createGroup(event.name, event.colorHex, event.iconUri)
             is ContainerListEvent.DeleteContainer -> deleteContainer(event)
+            is ContainerListEvent.ChangeContainerIcon -> changeContainerIcon(event.containerId, event.localPath)
             is ContainerListEvent.DeleteGroup -> deleteGroup(event)
+            is ContainerListEvent.ToggleNotification -> toggleNotification(event.containerId, event.enabled)
             is ContainerListEvent.RefreshContainer -> serviceController.refreshContainer(event.containerId)
             is ContainerListEvent.StopContainer -> serviceController.stopContainer(event.containerId)
             is ContainerListEvent.RefreshAll -> serviceController.refreshAll()
             is ContainerListEvent.StopAll -> serviceController.stopAll()
+            is ContainerListEvent.MoveContainerUp -> moveContainer(event.containerId, -1)
+            is ContainerListEvent.MoveContainerDown -> moveContainer(event.containerId, 1)
             is ContainerListEvent.ToggleKeepAlive -> toggleKeepAlive(event.containerId, event.enabled)
             is ContainerListEvent.MoveContainerToGroup -> moveContainerToGroup(event.containerId, event.groupId)
         }
@@ -101,6 +105,12 @@ class ContainerListViewModel @Inject constructor(
             } catch (e: IllegalArgumentException) {
                 _uiState.value = _uiState.value.copy(errorMessage = e.message)
             }
+        }
+    }
+
+    private fun toggleNotification(containerId: Long, enabled: Boolean) {
+        viewModelScope.launch {
+            containerRepository.setNotificationEnabled(containerId, enabled)
         }
     }
 
@@ -133,6 +143,27 @@ class ContainerListViewModel @Inject constructor(
     private fun moveContainerToGroup(containerId: Long, groupId: Long?) {
         viewModelScope.launch {
             containerRepository.moveToGroup(containerId, groupId)
+        }
+    }
+
+    private fun changeContainerIcon(containerId: Long, localPath: String) {
+        viewModelScope.launch {
+            containerRepository.updateFavicon(containerId, faviconUrl = null, localPath = localPath)
+        }
+    }
+
+    private fun moveContainer(containerId: Long, direction: Int) {
+        viewModelScope.launch {
+            val all = containerRepository.getAllContainersOnce()
+            val container = all.find { it.containerId == containerId } ?: return@launch
+            val siblings = all.filter { it.groupId == container.groupId }.sortedBy { it.position }
+            val index = siblings.indexOfFirst { it.containerId == containerId }
+            val swapIndex = index + direction
+            if (swapIndex !in siblings.indices) return@launch
+
+            val other = siblings[swapIndex]
+            containerRepository.updateContainer(container.copy(position = other.position))
+            containerRepository.updateContainer(other.copy(position = container.position))
         }
     }
 }
