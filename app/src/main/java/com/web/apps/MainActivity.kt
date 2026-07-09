@@ -36,6 +36,10 @@ class MainActivity : ComponentActivity() {
         googleSignInResultBus.emit(if (result.resultCode == RESULT_OK) result.data else null)
     }
 
+    private val notificationPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { /* granted or not, tidak perlu aksi khusus */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -50,6 +54,15 @@ class MainActivity : ComponentActivity() {
             val themeMode by themePreferenceManager.themeMode.collectAsState(
                 initial = com.web.apps.core.preferences.AppThemeMode.SYSTEM
             )
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                        if (androidx.core.content.ContextCompat.checkSelfPermission(
+                                this,
+                                android.Manifest.permission.POST_NOTIFICATIONS
+                            ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                        ) {
+                           notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                        }
+            }
             WebAppsTheme(themeMode = themeMode) {
                 WebAppsNavHost(
                     initialContainerId = initialContainerId,
