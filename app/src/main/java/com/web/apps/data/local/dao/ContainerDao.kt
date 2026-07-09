@@ -52,6 +52,9 @@ interface ContainerDao {
     @Query("UPDATE containers SET isNotificationEnabled = :enabled WHERE containerId = :containerId")
     suspend fun updateNotificationEnabled(containerId: Long, enabled: Boolean)
 
+    @Query("UPDATE containers SET isPinned = :pinned WHERE containerId = :containerId")
+    suspend fun updatePinned(containerId: Long, pinned: Boolean)
+
     @Query("UPDATE containers SET lastAccessedAt = :timestamp WHERE containerId = :containerId")
     suspend fun updateLastAccessed(containerId: Long, timestamp: Long = System.currentTimeMillis())
 

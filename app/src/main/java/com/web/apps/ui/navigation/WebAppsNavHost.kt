@@ -33,6 +33,7 @@ object WebAppsDestinations {
     const val STATISTICS = "statistics"
     const val CONTAINER_LOCK = "container_lock/{containerId}"
     const val SOURCE_INSPECTOR = "source_inspector/{containerId}"
+    const val ONBOARDING = "onboarding"
     const val PERMISSION_MANAGER = "permission_manager/{containerId}"
     const val SETTINGS = "settings"
     const val UPDATE_SYSTEM = "update_system"
@@ -51,9 +52,19 @@ fun WebAppsNavHost(
     onGoogleSignInRequested: (String) -> Unit = {}
 ) {
     val firebaseAuth = FirebaseAuth.getInstance()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val onboardingManager = remember {
+        EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            OnboardingEntryPoint::class.java
+        ).onboardingPreferenceManager()
+    }
+    val onboardingCompleted = remember { onboardingManager.isOnboardingCompletedBlocking() }
+
     val startDestination = when {
         initialContainerId != null -> WebAppsDestinations.browserRoute(initialContainerId)
         firebaseAuth.currentUser != null -> WebAppsDestinations.CONTAINER_LIST
+        !onboardingCompleted -> WebAppsDestinations.ONBOARDING
         else -> WebAppsDestinations.LOGIN
     }
 
@@ -70,6 +81,20 @@ fun WebAppsNavHost(
                     }
                 },
                 onGoogleSignInRequested = onGoogleSignInRequested
+            )
+        }
+
+        composable(WebAppsDestinations.ONBOARDING) {
+            onUpdateScreenActiveChanged(false)
+            com.web.apps.ui.onboarding.OnboardingScreen(
+                onFinished = {
+                    kotlinx.coroutines.MainScope().launch {
+                        onboardingManager.setOnboardingCompleted()
+                    }
+                    navController.navigate(WebAppsDestinations.LOGIN) {
+                        popUpTo(WebAppsDestinations.ONBOARDING) { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -189,4 +214,10 @@ fun WebAppsNavHost(
 @InstallIn(SingletonComponent::class)
 interface ContainerManagerEntryPoint {
     fun containerManager(): ContainerManager
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface OnboardingEntryPoint {
+    fun onboardingPreferenceManager(): com.web.apps.core.preferences.OnboardingPreferenceManager
 }

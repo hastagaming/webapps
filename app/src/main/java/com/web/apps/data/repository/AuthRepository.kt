@@ -85,7 +85,7 @@ class AuthRepository @Inject constructor(
             e.message?.contains("password is invalid", ignoreCase = true) == true ->
                 "Incorrect password. Please try again."
             e.message?.contains("no user record", ignoreCase = true) == true ->
-                "No account found with this email address."
+                "Cannot enter until the account sign up."
             e.message?.contains("email address is already in use", ignoreCase = true) == true ->
                 "This email address is already registered."
             e.message?.contains("badly formatted", ignoreCase = true) == true ->

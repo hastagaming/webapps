@@ -35,16 +35,20 @@ class ContainerListViewModel @Inject constructor(
             groupRepository.observeAllGroups(),
             containerRepository.observeAllContainers()
         ) { groups, allContainers ->
+            val pinned = allContainers.filter { it.isPinned }
+            val unpinned = allContainers.filter { !it.isPinned }
             val byGroup = groups.associate { group ->
-                group.groupId to allContainers.filter { it.groupId == group.groupId }
+                group.groupId to unpinned.filter { it.groupId == group.groupId }
             }
-            val ungrouped = allContainers.filter { it.groupId == null }
-            Triple(groups, byGroup, ungrouped)
-        }.onEach { (groups, byGroup, ungrouped) ->
+            val ungrouped = unpinned.filter { it.groupId == null }
+            listOf(groups, byGroup, ungrouped, pinned)
+        }.onEach { (groups, byGroup, ungrouped, pinned) ->
+            @Suppress("UNCHECKED_CAST")
             _uiState.value = _uiState.value.copy(
-                groups = groups,
-                containersByGroup = byGroup,
-                ungroupedContainers = ungrouped
+                groups = groups as List<com.web.apps.data.local.entity.GroupEntity>,
+                containersByGroup = byGroup as Map<Long, List<com.web.apps.data.local.entity.ContainerEntity>>,
+                ungroupedContainers = ungrouped as List<com.web.apps.data.local.entity.ContainerEntity>,
+                pinnedContainers = pinned as List<com.web.apps.data.local.entity.ContainerEntity>
             )
         }.launchIn(viewModelScope)
     }
@@ -81,6 +85,7 @@ class ContainerListViewModel @Inject constructor(
             is ContainerListEvent.StopAll -> serviceController.stopAll()
             is ContainerListEvent.MoveContainerUp -> moveContainer(event.containerId, -1)
             is ContainerListEvent.MoveContainerDown -> moveContainer(event.containerId, 1)
+            is ContainerListEvent.TogglePin -> togglePin(event.containerId, event.pinned)
             is ContainerListEvent.ToggleKeepAlive -> toggleKeepAlive(event.containerId, event.enabled)
             is ContainerListEvent.MoveContainerToGroup -> moveContainerToGroup(event.containerId, event.groupId)
         }
@@ -140,6 +145,12 @@ class ContainerListViewModel @Inject constructor(
     private fun toggleKeepAlive(containerId: Long, enabled: Boolean) {
         viewModelScope.launch {
             containerRepository.setKeepAlive(containerId, enabled)
+        }
+    }
+
+    private fun togglePin(containerId: Long, pinned: Boolean) {
+        viewModelScope.launch {
+            containerRepository.setPinned(containerId, pinned)
         }
     }
 

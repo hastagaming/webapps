@@ -191,6 +191,38 @@ fun ContainerListScreen(
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     if (uiState.ungroupedContainers.isNotEmpty()) {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    if (uiState.pinnedContainers.isNotEmpty()) {
+                        item {
+                            GroupSection(
+                                groupName = "Pinned",
+                                groupColor = MaterialTheme.colorScheme.primaryContainer,
+                                containers = uiState.pinnedContainers,
+                                onContainerClick = onContainerClick,
+                                onRefresh = { viewModel.onEvent(ContainerListEvent.RefreshContainer(it)) },
+                                onStop = { viewModel.onEvent(ContainerListEvent.StopContainer(it)) },
+                                onMoveUp = { viewModel.onEvent(ContainerListEvent.MoveContainerUp(it)) },
+                                onMoveDown = { viewModel.onEvent(ContainerListEvent.MoveContainerDown(it)) },
+                                onRequestMoveToGroup = { container -> containerForGroupMove = container },
+                                onToggleNotification = { containerId, enabled ->
+                                    viewModel.onEvent(ContainerListEvent.ToggleNotification(containerId, enabled))
+                                },
+                                onChangeIcon = { containerId, path ->
+                                    viewModel.onEvent(ContainerListEvent.ChangeContainerIcon(containerId, path))
+                                },
+                                onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
+                                onAddContainer = { },
+                                onOpenLockSettings = { containerId -> onNavigateToLockSettings(containerId) },
+                                onTogglePin = { containerId, pinned ->
+                                    viewModel.onEvent(ContainerListEvent.TogglePin(containerId, pinned))
+                                }
+                            )
+                        }
+                    }
+
+                    if (uiState.ungroupedContainers.isNotEmpty()) {
+                        item {
+                            GroupSection(
                         item {
                             GroupSection(
                                 groupName = "Without Group",
@@ -204,6 +236,9 @@ fun ContainerListScreen(
                                 onRequestMoveToGroup = { container -> containerForGroupMove = container },
                                 onToggleNotification = { containerId, enabled ->
                                     viewModel.onEvent(ContainerListEvent.ToggleNotification(containerId, enabled))
+                                },
+                                onTogglePin = { containerId, pinned ->
+                                    viewModel.onEvent(ContainerListEvent.TogglePin(containerId, pinned))
                                 },
                                 onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
                                 onAddContainer = {
@@ -323,6 +358,7 @@ private fun GroupSection(
     onMoveUp: (Long) -> Unit,
     onMoveDown: (Long) -> Unit,
     onToggleNotification: (Long, Boolean) -> Unit,
+    onTogglePin: (Long, Boolean) -> Unit,
     onRequestMoveToGroup: (com.web.apps.data.local.entity.ContainerEntity) -> Unit,
     onDeleteGroup: (() -> Unit)? = null
 ) {
@@ -362,6 +398,7 @@ private fun GroupSection(
                                         onToggleNotification = { enabled ->
                                              onToggleNotification(container.containerId, enabled)
                                         },
+                                        onTogglePin = { pinned -> onTogglePin(container.containerId, pinned) }
                                         onDelete = { onDelete(container) },
                                         onOpenLockSettings = { onOpenLockSettings(container.containerId) },
                                         onChangeIcon = { path -> onChangeIcon(container.containerId, path) },
@@ -402,6 +439,7 @@ private fun ContainerTile(
     onOpenLockSettings: () -> Unit,
     onChangeIcon: (String) -> Unit,
     onMoveUp: () -> Unit,
+    onTogglePin: (Boolean) -> Unit,
     onMoveDown: () -> Unit,
     onRequestMoveToGroup: () -> Unit
 ) {
@@ -491,6 +529,10 @@ private fun ContainerTile(
             DropdownMenuItem(
                 text = { Text(if (container.isNotificationEnabled) "Disable Notifications" else "Enable Notifications") },
                 onClick = { menuExpanded = false; onToggleNotification(!container.isNotificationEnabled) }
+            )
+            DropdownMenuItem(
+                text = { Text(if (container.isPinned) "Unpin" else "Pin to Top") },
+                onClick = { menuExpanded = false; onTogglePin(!container.isPinned) }
             )
             DropdownMenuItem(
                 text = { Text("Delete") },

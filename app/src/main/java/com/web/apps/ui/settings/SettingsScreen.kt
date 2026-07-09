@@ -10,6 +10,14 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -37,6 +45,10 @@ fun SettingsScreen(
     onNavigateToStatistics: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    val fontScalePercent by viewModel.fontScalePercent.collectAsState(initial = 100)
+    var showFontSizeDialog by remember { mutableStateOf(false) }
+    val accentColor by viewModel.accentColor.collectAsState(initial = null)
+    var showAccentDialog by remember { mutableStateOf(false) }
     val themeMode by viewModel.themeMode.collectAsState(initial = AppThemeMode.SYSTEM)
     var showThemeDialog by remember { mutableStateOf(false) }
 
@@ -58,6 +70,20 @@ fun SettingsScreen(
                 .fillMaxWidth()
         ) {
             ListItem(
+                headlineContent = { Text("Accent Color") },
+                supportingContent = { Text(if (accentColor == null) "Default" else "Custom") },
+                leadingContent = { Icon(Icons.Filled.Palette, contentDescription = null) },
+                modifier = Modifier.clickable { showAccentDialog = true }
+            )
+
+            ListItem(
+                headlineContent = { Text("Web Page Font Size") },
+                supportingContent = { Text(fontSizeLabel(fontScalePercent)) },
+                leadingContent = { Icon(Icons.Filled.TextFields, contentDescription = null) },
+                modifier = Modifier.clickable { showFontSizeDialog = true }
+            )
+
+            ListItem(
                 headlineContent = { Text("Theme") },
                 supportingContent = { Text(themeModeLabel(themeMode)) },
                 leadingContent = { Icon(Icons.Filled.DarkMode, contentDescription = null) },
@@ -78,6 +104,87 @@ fun SettingsScreen(
                 modifier = Modifier.clickable(onClick = onNavigateToStatistics)
             )
         }
+    }
+
+    if (showFontSizeDialog) {
+        val options = listOf(85 to "Small", 100 to "Default", 115 to "Large", 130 to "Extra Large")
+        AlertDialog(
+            onDismissRequest = { showFontSizeDialog = false },
+            title = { Text("Web Page Font Size") },
+            text = {
+                Column {
+                    options.forEach { (percent, label) ->
+                        ListItem(
+                            headlineContent = { Text(label) },
+                            leadingContent = {
+                                RadioButton(
+                                    selected = fontScalePercent == percent,
+                                    onClick = {
+                                        viewModel.setFontScalePercent(percent)
+                                        showFontSizeDialog = false
+                                    }
+                                )
+                            },
+                            modifier = Modifier.clickable {
+                                viewModel.setFontScalePercent(percent)
+                                showFontSizeDialog = false
+                            }
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showFontSizeDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    if (showAccentDialog) {
+        val presetColors = listOf(
+            "#2196F3", "#4CAF50", "#FF9800", "#E91E63",
+            "#9C27B0", "#009688", "#F44336", "#3F51B5"
+        )
+        AlertDialog(
+            onDismissRequest = { showAccentDialog = false },
+            title = { Text("Accent Color") },
+            text = {
+                Column {
+                    ListItem(
+                        headlineContent = { Text("Default (Dynamic)") },
+                        modifier = Modifier.clickable {
+                            viewModel.setAccentColor(null)
+                            showAccentDialog = false
+                        }
+                    )
+                    Row(
+                        modifier = Modifier.padding(top = 8.dp),
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+                    ) {
+                        presetColors.forEach { hex ->
+                            androidx.compose.foundation.layout.Box(
+                                modifier = Modifier
+                                    .aspectRatio(1f)
+                                    .background(
+                                        color = Color(android.graphics.Color.parseColor(hex)),
+                                        shape = RoundedCornerShape(50)
+                                    )
+                                    .clickable {
+                                        viewModel.setAccentColor(hex)
+                                        showAccentDialog = false
+                                    }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAccentDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
     }
 
     if (showThemeDialog) {
@@ -119,4 +226,11 @@ private fun themeModeLabel(mode: AppThemeMode): String = when (mode) {
     AppThemeMode.SYSTEM -> "Follow System"
     AppThemeMode.LIGHT -> "Light"
     AppThemeMode.DARK -> "Dark"
+}
+
+private fun fontSizeLabel(percent: Int): String = when (percent) {
+    85 -> "Small"
+    115 -> "Large"
+    130 -> "Extra Large"
+    else -> "Default"
 }

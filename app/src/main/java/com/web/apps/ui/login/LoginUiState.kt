@@ -15,7 +15,8 @@ sealed class LoginEvent {
     data class PasswordChanged(val value: String) : LoginEvent()
     object ToggleMode : LoginEvent()
     object SubmitEmailAuth : LoginEvent()
-    object SignInWithGoogle : LoginEvent()
+    object SignInWithGoogleSilent : LoginEvent()
+    object SignInWithGoogleInteractive : LoginEvent()
     object ForgotPassword : LoginEvent()
     object DismissMessage : LoginEvent()
 }

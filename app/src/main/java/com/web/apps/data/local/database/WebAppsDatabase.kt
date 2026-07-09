@@ -17,7 +17,7 @@ import com.web.apps.data.local.entity.GroupEntity
         ContainerEntity::class,
         DownloadEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

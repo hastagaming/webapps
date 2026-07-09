@@ -7,20 +7,22 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.web.apps.core.preferences.AppThemeMode
 
-private val LightColors = lightColorScheme(
-    primary = androidx.compose.ui.graphics.Color(0xFF2196F3)
+private val DefaultLightColors = lightColorScheme(
+    primary = Color(0xFF2196F3)
 )
 
-private val DarkColors = darkColorScheme(
-    primary = androidx.compose.ui.graphics.Color(0xFF90CAF9)
+private val DefaultDarkColors = darkColorScheme(
+    primary = Color(0xFF90CAF9)
 )
 
 @Composable
 fun WebAppsTheme(
     themeMode: AppThemeMode = AppThemeMode.SYSTEM,
+    accentColorHex: String? = null,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -34,11 +36,19 @@ fun WebAppsTheme(
     }
 
     val colorScheme = when {
+        accentColorHex != null -> {
+            val accent = try {
+                Color(android.graphics.Color.parseColor(accentColorHex))
+            } catch (e: Exception) {
+                if (darkTheme) Color(0xFF90CAF9) else Color(0xFF2196F3)
+            }
+            if (darkTheme) darkColorScheme(primary = accent) else lightColorScheme(primary = accent)
+        }
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColors
-        else -> LightColors
+        darkTheme -> DefaultDarkColors
+        else -> DefaultLightColors
     }
 
     MaterialTheme(

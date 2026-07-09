@@ -54,6 +54,8 @@ class MainActivity : ComponentActivity() {
             val themeMode by themePreferenceManager.themeMode.collectAsState(
                 initial = com.web.apps.core.preferences.AppThemeMode.SYSTEM
             )
+            val accentColor by themePreferenceManager.accentColor.collectAsState(initial = null)
+            WebAppsTheme(themeMode = themeMode, accentColorHex = accentColor) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                         if (androidx.core.content.ContextCompat.checkSelfPermission(
                                 this,

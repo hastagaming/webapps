@@ -185,7 +185,11 @@ fun LoginScreen(
 
             OutlinedButton(
                 onClick = {
-                    onGoogleSignInRequested(webClientId)
+                    if (uiState.isRegisterMode) {
+                        onGoogleSignInRequested(webClientId)
+                    } else {
+                        viewModel.onEvent(LoginEvent.SignInWithGoogleSilent)
+                    }
                 },
                 enabled = !uiState.isLoading,
                 colors = ButtonDefaults.outlinedButtonColors(),
@@ -193,7 +197,7 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(48.dp)
             ) {
-                Text("Continue with Google")
+                Text(if (uiState.isRegisterMode) "Sign Up with Google" else "Continue with Google")
             }
 
             Spacer(modifier = Modifier.height(24.dp))

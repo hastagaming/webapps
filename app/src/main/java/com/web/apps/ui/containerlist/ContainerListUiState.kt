@@ -10,6 +10,7 @@ data class ContainerListUiState(
     val searchQuery: String = "",
     val searchResults: List<ContainerEntity> = emptyList(),
     val isSearching: Boolean = false,
+    val pinnedContainers: List<ContainerEntity> = emptyList(),
     val showAddContainerDialog: Boolean = false,
     val showAddGroupDialog: Boolean = false,
     val addContainerTargetGroupId: Long? = null,
@@ -28,6 +29,7 @@ sealed class ContainerListEvent {
     data class DeleteContainer(val container: ContainerEntity) : ContainerListEvent()
     data class DeleteGroup(val group: GroupEntity) : ContainerListEvent()
     data class RefreshContainer(val containerId: Long) : ContainerListEvent()
+    data class TogglePin(val containerId: Long, val pinned: Boolean) : ContainerListEvent()
     data class ToggleNotification(val containerId: Long, val enabled: Boolean) : ContainerListEvent()
     data class StopContainer(val containerId: Long) : ContainerListEvent()
     object RefreshAll : ContainerListEvent()

@@ -40,6 +40,7 @@ data class ContainerEntity(
     val isFullscreenEnabled: Boolean = false,
     val isLocked: Boolean = false,
     val isNotificationEnabled: Boolean = false,
+    val isPinned: Boolean = false,
     val lockPinHash: String? = null,
     val isHttpAllowed: Boolean = false,
     val userAgentOverride: String? = null,

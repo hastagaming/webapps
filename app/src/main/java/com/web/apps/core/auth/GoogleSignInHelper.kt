@@ -6,6 +6,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.web.apps.R
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,6 +38,24 @@ class GoogleSignInHelper @Inject constructor() {
 
     fun getSignInIntent(context: Context): android.content.Intent? {
         return googleSignInClient?.signInIntent
+    }
+
+    suspend fun silentSignIn(context: Context, webClientId: String): GoogleSignInResult {
+        return try {
+            initializeGoogleSignIn(context, webClientId)
+            val client = googleSignInClient
+                ?: return GoogleSignInResult.Failure("No account signed in on this device.")
+
+            val account = client.silentSignIn().await()
+            val idToken = account.idToken
+            if (idToken != null) {
+                GoogleSignInResult.Success(idToken)
+            } else {
+                GoogleSignInResult.Failure("No account signed in on this device.")
+            }
+        } catch (e: Exception) {
+            GoogleSignInResult.Failure("No account signed in on this device.")
+        }
     }
 
     fun handleSignInResult(data: android.content.Intent?): GoogleSignInResult {

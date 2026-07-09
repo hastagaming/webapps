@@ -70,6 +70,13 @@ class ContainerRepository @Inject constructor(
         containerDao.updateLastAccessed(containerId)
     }
 
+    suspend fun setPinned(containerId: Long, pinned: Boolean) {
+        containerDao.updatePinned(containerId, pinned)
+        containerDao.getContainerById(containerId)?.let { c ->
+            syncScope.launch { supabaseSyncManager.pushContainer(c) }
+        }
+    }
+
     fun incrementOpenCount(containerId: Long) {
         syncScope.launch { containerDao.incrementOpenCount(containerId) }
     }

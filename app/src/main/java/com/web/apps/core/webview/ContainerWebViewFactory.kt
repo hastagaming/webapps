@@ -23,7 +23,8 @@ class ContainerWebViewFactory @Inject constructor(
     private val safeBrowsingChecker: SafeBrowsingChecker,
     private val sourceInspectorManager: SourceInspectorManager,
     private val recoveryManager: RecoveryManager,
-    private val notificationHelper: com.web.apps.core.notification.ContainerNotificationHelper
+    private val notificationHelper: com.web.apps.core.notification.ContainerNotificationHelper,
+    private val themePreferenceManager: com.web.apps.core.preferences.ThemePreferenceManager
 ) {
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -137,6 +138,7 @@ class ContainerWebViewFactory @Inject constructor(
         settings.setGeolocationEnabled(true)
         settings.allowFileAccess = false
         settings.allowContentAccess = false
+        settings.textZoom = themePreferenceManager.getFontScalePercentBlocking()
 
         val userAgent = when {
             container.userAgentOverride != null -> container.userAgentOverride

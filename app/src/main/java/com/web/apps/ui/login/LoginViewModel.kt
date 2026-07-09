@@ -1,5 +1,6 @@
 package com.web.apps.ui.login
 
+import com.web.apps.R
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -56,7 +57,8 @@ class LoginViewModel @Inject constructor(
                 )
             }
             is LoginEvent.SubmitEmailAuth -> submitEmailAuth()
-            is LoginEvent.SignInWithGoogle -> Unit
+            is LoginEvent.SignInWithGoogleSilent -> signInWithGoogleSilently()
+            is LoginEvent.SignInWithGoogleInteractive -> Unit
             is LoginEvent.ForgotPassword -> sendPasswordReset()
             is LoginEvent.DismissMessage -> {
                 _uiState.value = _uiState.value.copy(errorMessage = null, infoMessage = null)
@@ -85,6 +87,31 @@ class LoginViewModel @Inject constructor(
             }
             com.web.apps.core.crash.DebugLogger.log(appContext, "WebAppsAuth", "Repository returned: $result")
             handleAuthResult(result)
+        }
+    }
+
+    private fun signInWithGoogleSilently() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        viewModelScope.launch {
+            val webClientId = appContext.getString(R.string.default_web_client_id)
+            when (val result = googleSignInHelper.silentSignIn(appContext, webClientId)) {
+                is GoogleSignInResult.Success -> {
+                    val authResult = authRepository.signInWithGoogleIdToken(result.idToken)
+                    handleAuthResult(authResult)
+                }
+                is GoogleSignInResult.Failure -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "No account signed in on this device."
+                    )
+                }
+                is GoogleSignInResult.Cancelled -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "No account signed in on this device."
+                    )
+                }
+            }
         }
     }
 

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.filled.Warning
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -144,7 +145,22 @@ fun BrowserScreen(
                             ).webView
 
                             (webView.parent as? android.view.ViewGroup)?.removeView(webView)
-                            webView
+
+                            SwipeRefreshLayout(context).apply {
+                                setOnRefreshListener {
+                                    viewModel.onEvent(BrowserEvent.Refresh)
+                                }
+                                addView(
+                                    webView,
+                                    android.view.ViewGroup.LayoutParams(
+                                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                                    )
+                                )
+                            }
+                        },
+                        update = { swipeRefreshLayout ->
+                            swipeRefreshLayout.isRefreshing = uiState.isLoading
                         },
                         modifier = Modifier.fillMaxSize()
                     )
