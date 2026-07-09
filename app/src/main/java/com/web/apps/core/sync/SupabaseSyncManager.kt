@@ -32,9 +32,7 @@ class SupabaseSyncManager @Inject constructor(
                 icon_uri = group.iconUri,
                 position = group.position
             )
-            supabaseClient.postgrest.from("groups").upsert(remote) {
-                onConflict = "user_email,cloud_id"
-            }
+            supabaseClient.postgrest.from("groups").upsert(remote, onConflict = "user_email,cloud_id")
         } catch (e: Exception) {
             Log.e("SupabaseSync", "pushGroup failed", e)
         }
@@ -74,9 +72,7 @@ class SupabaseSyncManager @Inject constructor(
                 is_http_allowed = container.isHttpAllowed,
                 user_agent_override = container.userAgentOverride
             )
-            supabaseClient.postgrest.from("containers").upsert(remote) {
-                onConflict = "user_email,cloud_id"
-            }
+            supabaseClient.postgrest.from("containers").upsert(remote, onConflict = "user_email,cloud_id")
         } catch (e: Exception) {
             Log.e("SupabaseSync", "pushContainer failed", e)
         }
