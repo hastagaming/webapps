@@ -8,10 +8,7 @@ import com.web.apps.data.local.entity.ContainerEntity
 import com.web.apps.data.local.entity.GroupEntity
 import com.web.apps.data.local.entity.OrientationMode
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.postgrest
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,39 +19,21 @@ class SupabaseSyncManager @Inject constructor(
     private val containerDao: ContainerDao,
     private val groupDao: GroupDao
 ) {
-    private val postgrest: Postgrest = supabaseClient.postgrest
-
     private fun currentUserEmail(): String? = firebaseAuth.currentUser?.email
 
     suspend fun pushGroup(group: GroupEntity) {
         val email = currentUserEmail() ?: return
         try {
-            val data = mapOf(
-                "user_email" to email,
-                "cloud_id" to group.cloudId,
-                "name" to group.name,
-                "color_hex" to group.colorHex,
-                "icon_uri" to group.iconUri,
-                "position" to group.position,
-                "created_at" to group.createdAt
+            val remote = GroupRemote(
+                user_email = email,
+                cloud_id = group.cloudId,
+                name = group.name,
+                color_hex = group.colorHex,
+                icon_uri = group.iconUri,
+                position = group.position
             )
-
-            val existing = postgrest
-                .from("groups")
-                .select(Columns.list("cloud_id"))
-                .eq("user_email", email)
-                .eq("cloud_id", group.cloudId)
-                .decodeList<Map<String, Any>>()
-                .isNotEmpty()
-
-            if (existing) {
-                postgrest.from("groups")
-                    .update(data)
-                    .eq("user_email", email)
-                    .eq("cloud_id", group.cloudId)
-                    .execute()
-            } else {
-                postgrest.from("groups").insert(data).execute()
+            supabaseClient.postgrest.from("groups").upsert(remote) {
+                onConflict = "user_email,cloud_id"
             }
         } catch (e: Exception) {
             Log.e("SupabaseSync", "pushGroup failed", e)
@@ -64,11 +43,12 @@ class SupabaseSyncManager @Inject constructor(
     suspend fun deleteGroupRemote(cloudId: String) {
         val email = currentUserEmail() ?: return
         try {
-            postgrest.from("groups")
-                .delete()
-                .eq("user_email", email)
-                .eq("cloud_id", cloudId)
-                .execute()
+            supabaseClient.postgrest.from("groups").delete {
+                filter {
+                    eq("user_email", email)
+                    eq("cloud_id", cloudId)
+                }
+            }
         } catch (e: Exception) {
             Log.e("SupabaseSync", "deleteGroupRemote failed", e)
         }
@@ -79,40 +59,23 @@ class SupabaseSyncManager @Inject constructor(
         try {
             val groupCloudId = container.groupId?.let { groupDao.getGroupById(it)?.cloudId }
 
-            val data = mapOf(
-                "user_email" to email,
-                "cloud_id" to container.cloudId,
-                "group_cloud_id" to groupCloudId,
-                "name" to container.name,
-                "url" to container.url,
-                "favicon_url" to container.faviconUrl,
-                "position" to container.position,
-                "is_desktop_mode" to container.isDesktopMode,
-                "orientation_mode" to container.orientationMode.name,
-                "is_keep_alive_enabled" to container.isKeepAliveEnabled,
-                "is_fullscreen_enabled" to container.isFullscreenEnabled,
-                "is_http_allowed" to container.isHttpAllowed,
-                "user_agent_override" to container.userAgentOverride,
-                "created_at" to container.createdAt,
-                "updated_at" to container.updatedAt
+            val remote = ContainerRemote(
+                user_email = email,
+                cloud_id = container.cloudId,
+                group_cloud_id = groupCloudId,
+                name = container.name,
+                url = container.url,
+                favicon_url = container.faviconUrl,
+                position = container.position,
+                is_desktop_mode = container.isDesktopMode,
+                orientation_mode = container.orientationMode.name,
+                is_keep_alive_enabled = container.isKeepAliveEnabled,
+                is_fullscreen_enabled = container.isFullscreenEnabled,
+                is_http_allowed = container.isHttpAllowed,
+                user_agent_override = container.userAgentOverride
             )
-
-            val existing = postgrest
-                .from("containers")
-                .select(Columns.list("cloud_id"))
-                .eq("user_email", email)
-                .eq("cloud_id", container.cloudId)
-                .decodeList<Map<String, Any>>()
-                .isNotEmpty()
-
-            if (existing) {
-                postgrest.from("containers")
-                    .update(data)
-                    .eq("user_email", email)
-                    .eq("cloud_id", container.cloudId)
-                    .execute()
-            } else {
-                postgrest.from("containers").insert(data).execute()
+            supabaseClient.postgrest.from("containers").upsert(remote) {
+                onConflict = "user_email,cloud_id"
             }
         } catch (e: Exception) {
             Log.e("SupabaseSync", "pushContainer failed", e)
@@ -122,11 +85,12 @@ class SupabaseSyncManager @Inject constructor(
     suspend fun deleteContainerRemote(cloudId: String) {
         val email = currentUserEmail() ?: return
         try {
-            postgrest.from("containers")
-                .delete()
-                .eq("user_email", email)
-                .eq("cloud_id", cloudId)
-                .execute()
+            supabaseClient.postgrest.from("containers").delete {
+                filter {
+                    eq("user_email", email)
+                    eq("cloud_id", cloudId)
+                }
+            }
         } catch (e: Exception) {
             Log.e("SupabaseSync", "deleteContainerRemote failed", e)
         }
@@ -138,69 +102,59 @@ class SupabaseSyncManager @Inject constructor(
         try {
             val existingGroupCloudIds = groupDao.getAllGroupsOnce().map { it.cloudId }.toSet()
             val existingContainerCloudIds = containerDao.getAllContainersOnce().map { it.cloudId }.toSet()
-
             val cloudIdToLocalGroupId = mutableMapOf<String, Long>()
 
-            // Pull groups
-            val remoteGroups = postgrest
-                .from("groups")
-                .select()
-                .eq("user_email", email)
-                .decodeList<Map<String, Any?>>()
+            val remoteGroups = supabaseClient.postgrest.from("groups").select {
+                filter { eq("user_email", email) }
+            }.decodeList<GroupRemote>()
 
             for (doc in remoteGroups) {
-                val cloudId = doc["cloud_id"] as? String ?: continue
-                if (cloudId in existingGroupCloudIds) continue
+                if (doc.cloud_id in existingGroupCloudIds) continue
 
                 val group = GroupEntity(
-                    cloudId = cloudId,
-                    name = doc["name"] as? String ?: "",
-                    colorHex = doc["color_hex"] as? String ?: "#2196F3",
+                    cloudId = doc.cloud_id,
+                    name = doc.name,
+                    colorHex = doc.color_hex,
                     iconUri = null,
-                    position = (doc["position"] as? Number)?.toInt() ?: 0,
+                    position = doc.position,
                     createdAt = System.currentTimeMillis()
                 )
                 val newLocalId = groupDao.insertGroup(group)
-                cloudIdToLocalGroupId[cloudId] = newLocalId
+                cloudIdToLocalGroupId[doc.cloud_id] = newLocalId
             }
 
             groupDao.getAllGroupsOnce().forEach { g ->
                 cloudIdToLocalGroupId[g.cloudId] = g.groupId
             }
 
-            // Pull containers
-            val remoteContainers = postgrest
-                .from("containers")
-                .select()
-                .eq("user_email", email)
-                .decodeList<Map<String, Any?>>()
+            val remoteContainers = supabaseClient.postgrest.from("containers").select {
+                filter { eq("user_email", email) }
+            }.decodeList<ContainerRemote>()
 
             for (doc in remoteContainers) {
-                val cloudId = doc["cloud_id"] as? String ?: continue
-                if (cloudId in existingContainerCloudIds) continue
+                if (doc.cloud_id in existingContainerCloudIds) continue
 
-                val groupCloudId = doc["group_cloud_id"] as? String
-                val localGroupId = groupCloudId?.let { cloudIdToLocalGroupId[it] }
+                val localGroupId = doc.group_cloud_id?.let { cloudIdToLocalGroupId[it] }
 
                 val orientation = try {
-                    OrientationMode.valueOf(doc["orientation_mode"] as? String ?: "SYSTEM")
+                    OrientationMode.valueOf(doc.orientation_mode)
                 } catch (e: Exception) {
                     OrientationMode.SYSTEM
                 }
 
                 val container = ContainerEntity(
-                    cloudId = cloudId,
-                    name = doc["name"] as? String ?: "",
-                    url = doc["url"] as? String ?: "",
-                    faviconUrl = doc["favicon_url"] as? String,
+                    cloudId = doc.cloud_id,
+                    name = doc.name,
+                    url = doc.url,
+                    faviconUrl = doc.favicon_url,
                     groupId = localGroupId,
-                    position = (doc["position"] as? Number)?.toInt() ?: 0,
-                    isDesktopMode = doc["is_desktop_mode"] as? Boolean ?: false,
+                    position = doc.position,
+                    isDesktopMode = doc.is_desktop_mode,
                     orientationMode = orientation,
-                    isKeepAliveEnabled = doc["is_keep_alive_enabled"] as? Boolean ?: false,
-                    isFullscreenEnabled = doc["is_fullscreen_enabled"] as? Boolean ?: false,
-                    isHttpAllowed = doc["is_http_allowed"] as? Boolean ?: false,
-                    userAgentOverride = doc["user_agent_override"] as? String,
+                    isKeepAliveEnabled = doc.is_keep_alive_enabled,
+                    isFullscreenEnabled = doc.is_fullscreen_enabled,
+                    isHttpAllowed = doc.is_http_allowed,
+                    userAgentOverride = doc.user_agent_override,
                     createdAt = System.currentTimeMillis(),
                     updatedAt = System.currentTimeMillis()
                 )
