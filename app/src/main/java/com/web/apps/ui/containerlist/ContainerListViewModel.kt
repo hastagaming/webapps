@@ -19,7 +19,8 @@ import javax.inject.Inject
 class ContainerListViewModel @Inject constructor(
     private val containerRepository: ContainerRepository,
     private val groupRepository: GroupRepository,
-    private val serviceController: ContainerServiceController
+    private val serviceController: ContainerServiceController,
+    private val containerManager: com.web.apps.core.container.ContainerManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ContainerListUiState())
@@ -47,6 +48,8 @@ class ContainerListViewModel @Inject constructor(
             )
         }.launchIn(viewModelScope)
     }
+
+    fun getActiveSessionCount(): Int = containerManager.getActiveSessionCount()
 
     fun onEvent(event: ContainerListEvent) {
         when (event) {

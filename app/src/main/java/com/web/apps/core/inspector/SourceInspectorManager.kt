@@ -15,25 +15,32 @@ data class InspectedResource(
 class SourceInspectorManager @Inject constructor() {
 
     private val resourceLogByContainer = mutableMapOf<Long, MutableList<InspectedResource>>()
+    private val lock = Any()
 
     companion object {
         private const val MAX_LOG_ENTRIES_PER_CONTAINER = 200
     }
 
     fun logResource(containerId: Long, resource: InspectedResource) {
-        val log = resourceLogByContainer.getOrPut(containerId) { mutableListOf() }
-        log.add(0, resource)
-        while (log.size > MAX_LOG_ENTRIES_PER_CONTAINER) {
-            log.removeAt(log.lastIndex)
+        synchronized(lock) {
+            val log = resourceLogByContainer.getOrPut(containerId) { mutableListOf() }
+            log.add(0, resource)
+            while (log.size > MAX_LOG_ENTRIES_PER_CONTAINER) {
+                log.removeAt(log.lastIndex)
+            }
         }
     }
 
     fun getResourceLog(containerId: Long): List<InspectedResource> {
-        return resourceLogByContainer[containerId]?.toList() ?: emptyList()
+        synchronized(lock) {
+            return resourceLogByContainer[containerId]?.toList() ?: emptyList()
+        }
     }
 
     fun clearLog(containerId: Long) {
-        resourceLogByContainer.remove(containerId)
+        synchronized(lock) {
+            resourceLogByContainer.remove(containerId)
+        }
     }
 
     fun fetchPageSource(webView: WebView, onResult: (String) -> Unit) {

@@ -26,9 +26,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Settings
@@ -79,10 +84,13 @@ fun ContainerListScreen(
     viewModel: ContainerListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
     var fabMenuExpanded by remember { mutableStateOf(false) }
     var containerForGroupMove by remember { mutableStateOf<ContainerEntity?>(null) }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("WebApps") },
@@ -99,10 +107,34 @@ fun ContainerListScreen(
                     IconButton(onClick = { onNavigateToSettings() }) {
                         Icon(Icons.Filled.Settings, contentDescription = "Settings")
                     }
-                    IconButton(onClick = { viewModel.onEvent(ContainerListEvent.RefreshAll) }) {
+                    IconButton(onClick = {
+                        val activeCount = viewModel.getActiveSessionCount()
+                        if (activeCount == 0) {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("No active containers to refresh. Open a container first.")
+                            }
+                        } else {
+                            viewModel.onEvent(ContainerListEvent.RefreshAll)
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Refreshed $activeCount container(s)")
+                            }
+                        }
+                    }) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh All")
                     }
-                    IconButton(onClick = { viewModel.onEvent(ContainerListEvent.StopAll) }) {
+                    IconButton(onClick = {
+                        val activeCount = viewModel.getActiveSessionCount()
+                        if (activeCount == 0) {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("No active containers to stop.")
+                            }
+                        } else {
+                            viewModel.onEvent(ContainerListEvent.StopAll)
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Stopped $activeCount container(s)")
+                            }
+                        }
+                    }) {
                         Icon(Icons.Filled.Stop, contentDescription = "Stop All")
                     }
                 }
@@ -592,32 +624,38 @@ private fun AddContainerDialog(
                 }
 
                 if (inputMode == ContainerInputMode.SEARCH) {
-                    Box(modifier = Modifier.padding(top = 8.dp)) {
-                        OutlinedTextField(
-                            value = selectedEngine.label,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Search Engine") },
-                            singleLine = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .combinedClickable(
-                                    onClick = { engineMenuExpanded = true },
-                                    onLongClick = {}
-                                )
-                        )
-                        DropdownMenu(
-                            expanded = engineMenuExpanded,
-                            onDismissRequest = { engineMenuExpanded = false }
-                        ) {
-                            SEARCH_ENGINE_OPTIONS.forEach { engine ->
-                                DropdownMenuItem(
-                                    text = { Text(engine.label) },
-                                    onClick = {
-                                        selectedEngine = engine
-                                        engineMenuExpanded = false
-                                    }
-                                )
+                    Column(modifier = Modifier.padding(top = 8.dp)) {
+                        Text("Search Engine", style = MaterialTheme.typography.labelMedium)
+                        Box {
+                            androidx.compose.material3.OutlinedButton(
+                                onClick = { engineMenuExpanded = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                androidx.compose.foundation.layout.Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                                ) {
+                                    Text(selectedEngine.label)
+                                    Icon(
+                                        imageVector = androidx.compose.material.icons.Icons.Filled.ArrowDropDown,
+                                        contentDescription = "Show search engine options"
+                                    )
+                                }
+                            }
+                            DropdownMenu(
+                                expanded = engineMenuExpanded,
+                                onDismissRequest = { engineMenuExpanded = false }
+                            ) {
+                                SEARCH_ENGINE_OPTIONS.forEach { engine ->
+                                    DropdownMenuItem(
+                                        text = { Text(engine.label) },
+                                        onClick = {
+                                            selectedEngine = engine
+                                            engineMenuExpanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -103,7 +104,7 @@ fun BrowserScreen(
                             }
                         }) {
                             Icon(
-                                androidx.compose.material.icons.Icons.Filled.Refresh,
+                                androidx.compose.material.icons.Icons.Filled.Warning,
                                 contentDescription = "Force Recovery"
                             )
                         }
