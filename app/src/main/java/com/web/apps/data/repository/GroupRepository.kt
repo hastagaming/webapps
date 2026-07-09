@@ -51,7 +51,7 @@ class GroupRepository @Inject constructor(
 
     suspend fun deleteGroup(group: GroupEntity) {
         groupDao.deleteGroup(group)
-        syncScope.launch { supabaseSyncManager.deleteGroupRemote(group.supabaseId) }
+        syncScope.launch { supabaseSyncManager.deleteGroupRemote(group.cloudId) }
     }
 
     suspend fun reorderGroup(groupId: Long, newPosition: Int) {

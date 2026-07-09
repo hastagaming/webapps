@@ -43,6 +43,15 @@ interface ContainerDao {
     @Query("SELECT * FROM containers")
     suspend fun getAllContainersOnce(): List<ContainerEntity>
 
+    @Query("UPDATE containers SET openCount = openCount + 1 WHERE containerId = :containerId")
+    suspend fun incrementOpenCount(containerId: Long)
+
+    @Query("UPDATE containers SET totalUsageMillis = totalUsageMillis + :millis WHERE containerId = :containerId")
+    suspend fun addUsageMillis(containerId: Long, millis: Long)
+
+    @Query("UPDATE containers SET isNotificationEnabled = :enabled WHERE containerId = :containerId")
+    suspend fun updateNotificationEnabled(containerId: Long, enabled: Boolean)
+
     @Query("UPDATE containers SET lastAccessedAt = :timestamp WHERE containerId = :containerId")
     suspend fun updateLastAccessed(containerId: Long, timestamp: Long = System.currentTimeMillis())
 

@@ -35,7 +35,7 @@ class WebAppsWidget : GlanceAppWidget() {
             ) {
                 Text(
                     text = "WebApps",
-                    style = TextStyle(fontSize = androidx.compose.ui.unit.sp(16))
+                    style = TextStyle(fontSize = androidx.compose.ui.unit.TextUnit(16f, androidx.compose.ui.unit.TextUnitType.Sp))
                 )
 
                 containers.forEach { container ->

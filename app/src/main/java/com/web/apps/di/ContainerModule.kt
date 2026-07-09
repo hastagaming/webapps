@@ -27,12 +27,14 @@ object ContainerModule {
         permissionManager: ContainerPermissionManager,
         safeBrowsingChecker: SafeBrowsingChecker,
         sourceInspectorManager: SourceInspectorManager,
-        recoveryManager: RecoveryManager
+        recoveryManager: RecoveryManager,
+        notificationHelper: com.web.apps.core.notification.ContainerNotificationHelper
     ): ContainerWebViewFactory = ContainerWebViewFactory(
         permissionManager,
         safeBrowsingChecker,
         sourceInspectorManager,
-        recoveryManager
+        recoveryManager,
+        notificationHelper
     )
 
     @Provides

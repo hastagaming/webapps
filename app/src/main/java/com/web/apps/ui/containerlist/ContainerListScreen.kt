@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.items
@@ -195,8 +196,11 @@ fun ContainerListScreen(
                             onRefresh = { viewModel.onEvent(ContainerListEvent.RefreshContainer(it)) },
                             onStop = { viewModel.onEvent(ContainerListEvent.StopContainer(it)) },
                             onMoveUp = { viewModel.onEvent(ContainerListEvent.MoveContainerUp(it)) },
-                                onMoveDown = { viewModel.onEvent(ContainerListEvent.MoveContainerDown(it)) },
-                                onRequestMoveToGroup = { container -> containerForGroupMove = container },
+                            onMoveDown = { viewModel.onEvent(ContainerListEvent.MoveContainerDown(it)) },
+                            onRequestMoveToGroup = { container -> containerForGroupMove = container },
+                            onToggleNotification = { containerId, enabled ->
+                                viewModel.onEvent(ContainerListEvent.ToggleNotification(containerId, enabled))
+                            },
                             onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
                             onAddContainer = {
                                 viewModel.onEvent(ContainerListEvent.OpenAddContainerDialog(groupId = group.groupId))
@@ -286,6 +290,7 @@ private fun GroupSection(
     onChangeIcon: (Long, String) -> Unit,
     onMoveUp: (Long) -> Unit,
     onMoveDown: (Long) -> Unit,
+    onToggleNotification: (Long, Boolean) -> Unit,
     onRequestMoveToGroup: (com.web.apps.data.local.entity.ContainerEntity) -> Unit,
     onDeleteGroup: (() -> Unit)? = null
 ) {

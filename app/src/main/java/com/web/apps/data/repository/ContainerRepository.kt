@@ -34,14 +34,6 @@ class ContainerRepository @Inject constructor(
     fun searchContainers(query: String): Flow<List<ContainerEntity>> =
         containerDao.searchContainers(query)
 
-    fun incrementOpenCount(containerId: Long) {
-        syncScope.launch { containerDao.incrementOpenCount(containerId) }
-    }
-
-    fun addUsageMillis(containerId: Long, millis: Long) {
-        syncScope.launch { containerDao.addUsageMillis(containerId, millis) }
-    }
-
     suspend fun getContainerById(containerId: Long): ContainerEntity? =
         containerDao.getContainerById(containerId)
 
@@ -71,11 +63,19 @@ class ContainerRepository @Inject constructor(
 
     suspend fun deleteContainer(container: ContainerEntity) {
         containerDao.deleteContainer(container)
-        syncScope.launch { supabaseSyncManager.deleteContainerRemote(container.supabaseId) }
+        syncScope.launch { supabaseSyncManager.deleteContainerRemote(container.cloudId) }
     }
 
     suspend fun markAccessed(containerId: Long) {
         containerDao.updateLastAccessed(containerId)
+    }
+
+    fun incrementOpenCount(containerId: Long) {
+        syncScope.launch { containerDao.incrementOpenCount(containerId) }
+    }
+
+    fun addUsageMillis(containerId: Long, millis: Long) {
+        syncScope.launch { containerDao.addUsageMillis(containerId, millis) }
     }
 
     suspend fun setNotificationEnabled(containerId: Long, enabled: Boolean) {

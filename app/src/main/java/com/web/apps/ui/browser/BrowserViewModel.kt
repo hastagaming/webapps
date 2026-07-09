@@ -32,14 +32,6 @@ class BrowserViewModel @Inject constructor(
         observeContainer()
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        val elapsed = System.currentTimeMillis() - sessionStartTime
-        if (elapsed > 0) {
-            containerRepository.addUsageMillis(containerId, elapsed)
-        }
-    }
-
     private fun observeContainer() {
         containerRepository.observeContainerById(containerId)
             .onEach { container ->
@@ -172,6 +164,12 @@ class BrowserViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+
+        val elapsed = System.currentTimeMillis() - sessionStartTime
+        if (elapsed > 0) {
+            containerRepository.addUsageMillis(containerId, elapsed)
+        }
+
         val container = _uiState.value.container
         if (container?.isKeepAliveEnabled != true) {
             containerManager.stopContainer(containerId)

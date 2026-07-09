@@ -36,5 +36,4 @@ sealed class ContainerListEvent {
     data class MoveContainerUp(val containerId: Long) : ContainerListEvent()
     data class MoveContainerDown(val containerId: Long) : ContainerListEvent()
     data class ToggleKeepAlive(val containerId: Long, val enabled: Boolean) : ContainerListEvent()
-    data class MoveContainerToGroup(val containerId: Long, val groupId: Long?) : ContainerListEvent()
 }

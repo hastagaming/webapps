@@ -1,5 +1,6 @@
 package com.web.apps.di
 
+import com.web.apps.core.sync.SupabaseSyncManager
 import com.web.apps.data.local.dao.ContainerDao
 import com.web.apps.data.local.dao.DownloadDao
 import com.web.apps.data.local.dao.GroupDao
@@ -18,13 +19,17 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideGroupRepository(groupDao: GroupDao): GroupRepository =
-        GroupRepository(groupDao)
+    fun provideGroupRepository(
+        groupDao: GroupDao,
+        supabaseSyncManager: SupabaseSyncManager
+    ): GroupRepository = GroupRepository(groupDao, supabaseSyncManager)
 
     @Provides
     @Singleton
-    fun provideContainerRepository(containerDao: ContainerDao): ContainerRepository =
-        ContainerRepository(containerDao)
+    fun provideContainerRepository(
+        containerDao: ContainerDao,
+        supabaseSyncManager: SupabaseSyncManager
+    ): ContainerRepository = ContainerRepository(containerDao, supabaseSyncManager)
 
     @Provides
     @Singleton
