@@ -149,6 +149,126 @@ class BackupManager @Inject constructor(
         }
     }
 
+    suspend fun exportBackupAutoToDownloads(context: Context, encrypt: Boolean): BackupResult = withContext(Dispatchers.IO) {
+        try {
+            val groups = groupDao.observeAllGroups().first()
+            val containers = containerDao.observeAllContainers().first()
+
+            val payload = BackupPayload(
+                exportedAt = System.currentTimeMillis(),
+                appVersionName = getAppVersionName(context),
+                groups = groups.map {
+                    BackupGroupModel(
+                        groupId = it.groupId,
+                        name = it.name,
+                        colorHex = it.colorHex,
+                        position = it.position,
+                        createdAt = it.createdAt
+                    )
+                },
+                containers = containers.map {
+                    BackupContainerModel(
+                        containerId = it.containerId,
+                        name = it.name,
+                        url = it.url,
+                        faviconUrl = it.faviconUrl,
+                        groupId = it.groupId,
+                        position = it.position,
+                        isDesktopMode = it.isDesktopMode,
+                        orientationMode = it.orientationMode.name,
+                        isKeepAliveEnabled = it.isKeepAliveEnabled,
+                        isFullscreenEnabled = it.isFullscreenEnabled,
+                        isLocked = false,
+                        isHttpAllowed = it.isHttpAllowed,
+                        userAgentOverride = it.userAgentOverride,
+                        createdAt = it.createdAt,
+                        updatedAt = it.updatedAt
+                    )
+                }
+            )
+
+            val jsonString = json.encodeToString(payload)
+            val fileContent = if (encrypt) {
+                val encrypted = keystoreManager.encrypt(jsonString.toByteArray(Charsets.UTF_8))
+                buildEncryptedFileContent(encrypted)
+            } else {
+                "$BACKUP_FILE_MAGIC\nPLAIN\n$jsonString"
+            }
+
+            val fileName = "webapps_auto_backup_${System.currentTimeMillis()}.txt"
+            val uri = createDownloadsFile(context, fileName)
+                ?: return@withContext BackupResult.Failure("Could not create backup file in Downloads.")
+
+            context.contentResolver.openOutputStream(uri)?.use { stream ->
+                stream.write(fileContent.toByteArray(Charsets.UTF_8))
+                stream.flush()
+            } ?: return@withContext BackupResult.Failure("Could not open output stream.")
+
+            cleanupOldAutoBackups(context)
+
+            BackupResult.Success("Auto backup saved (${containers.size} containers, ${groups.size} groups)")
+        } catch (e: Exception) {
+            BackupResult.Failure("Auto backup failed: ${e.message}")
+        }
+    }
+
+    private fun createDownloadsFile(context: Context, fileName: String): Uri? {
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            val values = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.Downloads.DISPLAY_NAME, fileName)
+                put(android.provider.MediaStore.Downloads.MIME_TYPE, "text/plain")
+                put(android.provider.MediaStore.Downloads.RELATIVE_PATH, "Download/WebApps/backups")
+            }
+            context.contentResolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+        } else {
+            val dir = java.io.File(
+                android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS),
+                "WebApps/backups"
+            )
+            if (!dir.exists()) dir.mkdirs()
+            val file = java.io.File(dir, fileName)
+            Uri.fromFile(file)
+        }
+    }
+
+    private fun cleanupOldAutoBackups(context: Context) {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                val projection = arrayOf(
+                    android.provider.MediaStore.Downloads._ID,
+                    android.provider.MediaStore.Downloads.DISPLAY_NAME,
+                    android.provider.MediaStore.Downloads.DATE_ADDED
+                )
+                val selection = "${android.provider.MediaStore.Downloads.RELATIVE_PATH} = ?"
+                val selectionArgs = arrayOf("Download/WebApps/backups/")
+
+                val entries = mutableListOf<Pair<Long, Uri>>()
+                context.contentResolver.query(
+                    android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    projection, selection, selectionArgs,
+                    "${android.provider.MediaStore.Downloads.DATE_ADDED} DESC"
+                )?.use { cursor ->
+                    val idIndex = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Downloads._ID)
+                    val dateIndex = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Downloads.DATE_ADDED)
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(idIndex)
+                        val date = cursor.getLong(dateIndex)
+                        val uri = android.content.ContentUris.withAppendedId(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, id)
+                        entries.add(date to uri)
+                    }
+                }
+
+                if (entries.size > 5) {
+                    entries.drop(5).forEach { (_, uri) ->
+                        context.contentResolver.delete(uri, null, null)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // gagal cleanup tidak boleh crash
+        }
+    }
+
     private suspend fun applyImport(payload: BackupPayload, strategy: ImportMergeStrategy) {
         if (strategy == ImportMergeStrategy.REPLACE_ALL) {
             val existingContainers = containerDao.observeAllContainers().first()

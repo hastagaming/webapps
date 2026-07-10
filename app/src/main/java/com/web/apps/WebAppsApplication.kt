@@ -3,12 +3,23 @@ package com.web.apps
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
+import javax.inject.Inject
 import android.os.Build
 import com.web.apps.core.crash.CrashHandler
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class WebAppsApplication : Application() {
+class WebAppsApplication : Application(), Configuration.Provider {
+
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 
     companion object {
         const val CHANNEL_ID_CONTAINER_SERVICE = "container_notifications"

@@ -3,6 +3,15 @@ package com.web.apps.core.sync
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class KnownAccountRemote(
+    val device_id: String,
+    val email: String,
+    val display_name: String? = null,
+    val photo_url: String? = null,
+    val account_type: String
+)
+
+@Serializable
 data class GroupRemote(
     val user_email: String,
     val cloud_id: String,

@@ -7,7 +7,9 @@ data class LoginUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val infoMessage: String? = null,
-    val isAuthenticated: Boolean = false
+    val isAuthenticated: Boolean = false,
+    val showAccountForm: Boolean = false,
+    val pendingAccountEmail: String? = null
 )
 
 sealed class LoginEvent {
@@ -19,4 +21,7 @@ sealed class LoginEvent {
     object SignInWithGoogleInteractive : LoginEvent()
     object ForgotPassword : LoginEvent()
     object DismissMessage : LoginEvent()
+    data class SelectKnownAccount(val account: com.web.apps.core.auth.KnownAccount) : LoginEvent()
+    object ShowNewAccountForm : LoginEvent()
+    object BackToAccountList : LoginEvent()
 }

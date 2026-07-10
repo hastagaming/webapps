@@ -31,6 +31,8 @@ object WebAppsDestinations {
     const val CONTAINER_LIST = "container_list"
     const val BROWSER = "browser/{containerId}"
     const val BACKUP = "backup"
+    const val QR_EXPORT = "qr_export"
+    const val QR_SCAN = "qr_scan"
     const val STATISTICS = "statistics"
     const val CONTAINER_LOCK = "container_lock/{containerId}"
     const val SOURCE_INSPECTOR = "source_inspector/{containerId}"
@@ -196,6 +198,8 @@ fun WebAppsNavHost(
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToUpdate = { navController.navigate(WebAppsDestinations.UPDATE_SYSTEM) },
+                onNavigateToQrExport = { navController.navigate(WebAppsDestinations.QR_EXPORT) },
+                onNavigateToQrScan = { navController.navigate(WebAppsDestinations.QR_SCAN) },
                 onNavigateToStatistics = { navController.navigate(WebAppsDestinations.STATISTICS) }
             )
         }
@@ -208,6 +212,16 @@ fun WebAppsNavHost(
                     navController.popBackStack()
                 }
             )
+        }
+
+        composable(WebAppsDestinations.QR_EXPORT) {
+            onUpdateScreenActiveChanged(false)
+            com.web.apps.ui.qr.QrExportScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(WebAppsDestinations.QR_SCAN) {
+            onUpdateScreenActiveChanged(false)
+            com.web.apps.ui.qr.QrScanScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }

@@ -11,12 +11,38 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val themePreferenceManager: ThemePreferenceManager
+    private val themePreferenceManager: ThemePreferenceManager,
+    private val backupPreferenceManager: com.web.apps.core.preferences.BackupPreferenceManager,
+    private val backupScheduler: com.web.apps.backup.BackupScheduler,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context
 ) : ViewModel() {
 
     val themeMode: Flow<AppThemeMode> = themePreferenceManager.themeMode
     val accentColor: Flow<String?> = themePreferenceManager.accentColor
     val fontScalePercent: Flow<Int> = themePreferenceManager.fontScalePercent
+    val isAutoBackupEnabled: Flow<Boolean> = backupPreferenceManager.isAutoBackupEnabled
+    val autoBackupIntervalDays: Flow<Int> = backupPreferenceManager.intervalDays
+
+    fun setAutoBackupEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            backupPreferenceManager.setAutoBackupEnabled(enabled)
+            val days = backupPreferenceManager.getIntervalDaysBlocking()
+            if (enabled) {
+                backupScheduler.schedule(appContext, days)
+            } else {
+                backupScheduler.cancel(appContext)
+            }
+        }
+    }
+
+    fun setAutoBackupIntervalDays(days: Int) {
+        viewModelScope.launch {
+            backupPreferenceManager.setIntervalDays(days)
+            if (backupPreferenceManager.isAutoBackupEnabledBlocking()) {
+                backupScheduler.schedule(appContext, days)
+            }
+        }
+    }
 
     fun setFontScalePercent(percent: Int) {
         viewModelScope.launch {

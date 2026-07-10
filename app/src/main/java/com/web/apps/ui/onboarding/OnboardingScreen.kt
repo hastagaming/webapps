@@ -1,6 +1,8 @@
 package com.web.apps.ui.onboarding
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,8 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.background
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -19,35 +21,73 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.web.apps.ui.common.MarkdownText
 import kotlinx.coroutines.launch
 
 private data class OnboardingPage(
-    val title: String,
-    val description: String
+    val markdownContent: String
 )
 
 private val ONBOARDING_PAGES = listOf(
     OnboardingPage(
-        title = "Welcome to WebApps",
-        description = "Run multiple websites as isolated containers, each with its own cookies, sessions, and settings."
+        markdownContent = """
+            # Welcome to WebApps 👋
+
+            Run multiple websites as **isolated containers**, each with its own:
+
+            - Cookies & sessions
+            - Local storage
+            - Login state
+
+            No more mixing accounts between tabs.
+        """.trimIndent()
     ),
     OnboardingPage(
-        title = "Organize with Groups",
-        description = "Group your containers together and pin your favorites for quick access."
+        markdownContent = """
+            # Organize with Groups 📁
+
+            Keep things tidy:
+
+            - Create **Groups** to bundle related containers
+            - **Pin** your favorites to the top
+            - Reorder containers with **Move Up / Move Down**
+            - Move containers between groups anytime
+
+            ~~Messy tab chaos~~ → Organized workspace.
+        """.trimIndent()
     ),
     OnboardingPage(
-        title = "Stays Running",
-        description = "Containers keep running in the background via a foreground service, so you never lose your session."
+        markdownContent = """
+            # Stays Running 🔄
+
+            WebApps keeps your containers alive via a **Foreground Service**:
+
+            - [x] Sessions persist in the background
+            - [x] No unexpected logouts
+            - [x] Notification shows active containers
+
+            Just like Termux's persistent session.
+        """.trimIndent()
     ),
     OnboardingPage(
-        title = "Sign In to Sync",
-        description = "Sign in to back up your containers and groups to the cloud, so they're never lost."
+        markdownContent = """
+            # Sign In to Sync ☁️
+
+            Sign in to back up your data:
+
+            | Feature | Benefit |
+            |---|---|
+            | Cloud Sync | Never lose your setup |
+            | Multi-device | Access from anywhere |
+            | Auto Backup | Peace of mind |
+
+            Ready to get started?
+        """.trimIndent()
     )
 )
 
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@androidx.compose.foundation.ExperimentalFoundationApi
 @Composable
 fun OnboardingScreen(
     onFinished: () -> Unit
@@ -73,16 +113,9 @@ fun OnboardingScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = item.title,
-                        style = MaterialTheme.typography.headlineMedium,
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = item.description,
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 16.dp)
+                    MarkdownText(
+                        markdown = item.markdownContent,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -95,7 +128,7 @@ fun OnboardingScreen(
             ) {
                 repeat(ONBOARDING_PAGES.size) { index ->
                     val isSelected = pagerState.currentPage == index
-                    androidx.compose.foundation.layout.Box(
+                    Box(
                         modifier = Modifier
                             .padding(4.dp)
                             .height(8.dp)
@@ -103,7 +136,7 @@ fun OnboardingScreen(
                             .background(
                                 color = if (isSelected) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.surfaceVariant,
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
+                                shape = RoundedCornerShape(4.dp)
                             )
                     )
                 }

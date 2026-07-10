@@ -42,6 +42,8 @@ import com.web.apps.core.preferences.AppThemeMode
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToUpdate: () -> Unit,
+    onNavigateToQrExport: () -> Unit,
+    onNavigateToQrScan: () -> Unit,
     onNavigateToStatistics: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -49,6 +51,8 @@ fun SettingsScreen(
     var showFontSizeDialog by remember { mutableStateOf(false) }
     val accentColor by viewModel.accentColor.collectAsState(initial = null)
     var showAccentDialog by remember { mutableStateOf(false) }
+    val isAutoBackupEnabled by viewModel.isAutoBackupEnabled.collectAsState(initial = false)
+    val autoBackupIntervalDays by viewModel.autoBackupIntervalDays.collectAsState(initial = 7)
     val themeMode by viewModel.themeMode.collectAsState(initial = AppThemeMode.SYSTEM)
     var showThemeDialog by remember { mutableStateOf(false) }
 
@@ -102,6 +106,30 @@ fun SettingsScreen(
                 supportingContent = { Text("See how often each container is used") },
                 leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.BarChart, contentDescription = null) },
                 modifier = Modifier.clickable(onClick = onNavigateToStatistics)
+            )
+
+            ListItem(
+                headlineContent = { Text("Export via QR Code") },
+                leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.QrCode, contentDescription = null) },
+                modifier = Modifier.clickable(onClick = onNavigateToQrExport)
+            )
+
+            ListItem(
+                headlineContent = { Text("Import via QR Code") },
+                leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.QrCodeScanner, contentDescription = null) },
+                modifier = Modifier.clickable(onClick = onNavigateToQrScan)
+            )
+
+            ListItem(
+                headlineContent = { Text("Auto Backup") },
+                supportingContent = { Text(if (isAutoBackupEnabled) "Every $autoBackupIntervalDays days to Downloads" else "Off") },
+                leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.CloudDone, contentDescription = null) },
+                trailingContent = {
+                    androidx.compose.material3.Switch(
+                        checked = isAutoBackupEnabled,
+                        onCheckedChange = { viewModel.setAutoBackupEnabled(it) }
+                    )
+                }
             )
         }
     }
