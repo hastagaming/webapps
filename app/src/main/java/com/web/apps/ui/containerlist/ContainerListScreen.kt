@@ -223,8 +223,6 @@ fun ContainerListScreen(
                     if (uiState.ungroupedContainers.isNotEmpty()) {
                         item {
                             GroupSection(
-                        item {
-                            GroupSection(
                                 groupName = "Without Group",
                                 groupColor = MaterialTheme.colorScheme.surfaceVariant,
                                 containers = uiState.ungroupedContainers,
