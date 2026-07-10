@@ -146,6 +146,19 @@ class ContainerManager @Inject constructor(
         return containerRepository.getKeepAliveContainers().map { it.containerId }.toSet()
     }
 
+    suspend fun getActiveContainerInfoList(): List<com.web.apps.ui.appswitcher.ActiveContainerInfo> {
+        return activeSessions.values.filter { it.isAlive }.mapNotNull { session ->
+            val entity = containerRepository.getContainerById(session.containerId) ?: return@mapNotNull null
+            com.web.apps.ui.appswitcher.ActiveContainerInfo(
+                containerId = session.containerId,
+                name = entity.name,
+                url = session.currentUrl ?: entity.url,
+                faviconBitmap = session.faviconBitmap,
+                isKeepAliveEnabled = entity.isKeepAliveEnabled
+            )
+        }
+    }
+
     fun performHardReset(context: Context, containerId: Long) {
         stopContainer(containerId)
         webViewFactory.clearContainerData(context, containerId)

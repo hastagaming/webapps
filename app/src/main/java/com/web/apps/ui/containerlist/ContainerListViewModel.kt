@@ -5,6 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.web.apps.data.repository.ContainerRepository
 import com.web.apps.data.repository.GroupRepository
 import com.web.apps.service.ContainerServiceController
+import com.web.apps.data.repository.AuthRepository
+import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,10 +24,13 @@ class ContainerListViewModel @Inject constructor(
     private val containerRepository: ContainerRepository,
     private val groupRepository: GroupRepository,
     private val serviceController: ContainerServiceController,
-    private val containerManager: com.web.apps.core.container.ContainerManager
+    private val containerManager: com.web.apps.core.container.ContainerManager,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ContainerListUiState())
+    val currentUser: StateFlow<FirebaseUser?> = authRepository.observeAuthState()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), authRepository.currentUser)
     val uiState: StateFlow<ContainerListUiState> = _uiState.asStateFlow()
 
     init {

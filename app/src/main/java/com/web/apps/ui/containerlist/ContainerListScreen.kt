@@ -29,10 +29,12 @@ import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Stop
@@ -83,6 +85,12 @@ fun ContainerListScreen(
     onSignOut: () -> Unit = {},
     viewModel: ContainerListViewModel = hiltViewModel()
 ) {
+    val currentUser by viewModel.currentUser.collectAsState()
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        com.web.apps.core.notification.BadgeCountManager().clearBadge(context)
+    }
+    var accountMenuExpanded by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -93,7 +101,60 @@ fun ContainerListScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("WebApps") },
+                title = {
+                    Column {
+                        Text("WebApps")
+                        if (currentUser != null) {
+                            Box {
+                                androidx.compose.foundation.layout.Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .clickable { accountMenuExpanded = true }
+                                        .padding(top = 2.dp)
+                                ) {
+                                    if (currentUser?.photoUrl != null) {
+                                        AsyncImage(
+                                            model = currentUser?.photoUrl,
+                                            contentDescription = "Account photo",
+                                            modifier = Modifier
+                                                .size(20.dp)
+                                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = androidx.compose.material.icons.Icons.Filled.AccountCircle,
+                                            contentDescription = "Account",
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    Text(
+                                        text = currentUser?.displayName ?: currentUser?.email ?: "",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        modifier = Modifier.padding(start = 6.dp)
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = accountMenuExpanded,
+                                    onDismissRequest = { accountMenuExpanded = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(currentUser?.email ?: "") },
+                                        onClick = { accountMenuExpanded = false },
+                                        enabled = false
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Sign Out") },
+                                        onClick = {
+                                            accountMenuExpanded = false
+                                            com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                                            onSignOut()
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
                 actions = {
                     IconButton(onClick = { onNavigateToBackup() }) {
                         Icon(Icons.Filled.CloudUpload, contentDescription = "Backup & Restore")

@@ -11,7 +11,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ContainerNotificationHelper @Inject constructor() {
+class ContainerNotificationHelper @Inject constructor(
+    private val badgeCountManager: BadgeCountManager
+) {
 
     companion object {
         const val CHANNEL_ID = "container_alerts"
@@ -24,13 +26,16 @@ class ContainerNotificationHelper @Inject constructor() {
                 CHANNEL_ID,
                 "Container Alerts",
                 NotificationManager.IMPORTANCE_DEFAULT
-            )
+            ).apply {
+                setShowBadge(true)
+            }
             manager.createNotificationChannel(channel)
         }
     }
 
     fun showUnreadNotification(context: Context, containerId: Long, containerName: String, title: String) {
         ensureChannel(context)
+        badgeCountManager.incrementBadge(context)
 
         val intent = Intent(context, MainActivity::class.java).apply {
             putExtra("EXTRA_CONTAINER_ID", containerId)
@@ -49,6 +54,7 @@ class ContainerNotificationHelper @Inject constructor() {
             .setContentText(title)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
+            .setNumber(badgeCountManager.getCurrentCount(context))
             .build()
 
         val manager = context.getSystemService(NotificationManager::class.java)

@@ -25,6 +25,9 @@ class MainActivity : ComponentActivity() {
     lateinit var googleSignInHelper: GoogleSignInHelper
 
     @Inject
+    lateinit var appSwitcherTrigger: com.web.apps.core.appswitcher.AppSwitcherTrigger
+
+    @Inject
     lateinit var themePreferenceManager: com.web.apps.core.preferences.ThemePreferenceManager
 
     @Inject
@@ -65,16 +68,44 @@ class MainActivity : ComponentActivity() {
             )
             val accentColor by themePreferenceManager.accentColor.collectAsState(initial = null)
             WebAppsTheme(themeMode = themeMode, accentColorHex = accentColor) {
-                WebAppsNavHost(
-                    initialContainerId = initialContainerId,
-                    onUpdateScreenActiveChanged = { isActive -> isUpdateScreenActive = isActive },
-                    onGoogleSignInRequested = {
-                        val intent = googleSignInHelper.getSignInIntent(this@MainActivity)
-                        if (intent != null) {
-                            googleSignInLauncher.launch(intent)
+                androidx.compose.foundation.layout.Box {
+                    WebAppsNavHost(
+                        initialContainerId = initialContainerId,
+                        onUpdateScreenActiveChanged = { isActive -> isUpdateScreenActive = isActive },
+                        onGoogleSignInRequested = {
+                            val intent = googleSignInHelper.getSignInIntent(this@MainActivity)
+                            if (intent != null) {
+                                googleSignInLauncher.launch(intent)
+                            }
                         }
+                    )
+
+                    val appSwitcherViewModel: com.web.apps.ui.appswitcher.AppSwitcherViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                    val switcherState by appSwitcherViewModel.uiState.collectAsState()
+
+                    if (switcherState.isVisible) {
+                        com.web.apps.ui.appswitcher.AppSwitcherOverlay(
+                            activeContainers = switcherState.activeContainers,
+                            onSwitchToContainer = { containerId ->
+                                appSwitcherViewModel.onEvent(com.web.apps.ui.appswitcher.AppSwitcherEvent.SwitchToContainer(containerId))
+                                val intent = Intent(this@MainActivity, MainActivity::class.java).apply {
+                                    putExtra("EXTRA_CONTAINER_ID", containerId)
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                }
+                                startActivity(intent)
+                            },
+                            onDismissContainer = { containerId ->
+                                appSwitcherViewModel.onEvent(com.web.apps.ui.appswitcher.AppSwitcherEvent.DismissContainer(containerId))
+                            },
+                            onDismissAll = {
+                                appSwitcherViewModel.onEvent(com.web.apps.ui.appswitcher.AppSwitcherEvent.DismissAll)
+                            },
+                            onClose = {
+                                appSwitcherViewModel.onEvent(com.web.apps.ui.appswitcher.AppSwitcherEvent.Hide)
+                            }
+                        )
                     }
-                )
+                }
             }
         }
     }
@@ -86,6 +117,17 @@ class MainActivity : ComponentActivity() {
             }
             else -> super.onKeyDown(keyCode, event)
         }
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN &&
+            event.keyCode == KeyEvent.KEYCODE_TAB &&
+            event.isCtrlPressed
+        ) {
+            appSwitcherTrigger.trigger()
+            return true
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     override fun onBackPressed() {

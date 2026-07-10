@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.web.apps.core.container.ContainerManager
 import com.web.apps.data.repository.ContainerRepository
+import com.web.apps.core.appswitcher.AppSwitcherTrigger
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,11 +17,20 @@ import javax.inject.Inject
 @HiltViewModel
 class AppSwitcherViewModel @Inject constructor(
     private val containerManager: ContainerManager,
-    private val containerRepository: ContainerRepository
+    private val containerRepository: ContainerRepository,
+    trigger: AppSwitcherTrigger
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AppSwitcherUiState())
     val uiState: StateFlow<AppSwitcherUiState> = _uiState.asStateFlow()
+
+    init {
+        trigger.triggers
+            .onEach {
+                if (_uiState.value.isVisible) hide() else show()
+            }
+            .launchIn(viewModelScope)
+    }
 
     fun onEvent(event: AppSwitcherEvent) {
         when (event) {
