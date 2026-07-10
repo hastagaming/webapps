@@ -276,6 +276,9 @@ fun ContainerListScreen(
                             onDeleteGroup = { viewModel.onEvent(ContainerListEvent.DeleteGroup(group)) },
                             onChangeIcon = { containerId, path ->
                                     viewModel.onEvent(ContainerListEvent.ChangeContainerIcon(containerId, path))
+                            },
+                            onTogglePin = { containerId, pinned ->
+                                viewModel.onEvent(ContainerListEvent.TogglePin(containerId, pinned))
                             }
                         )
                     }
