@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
+import android.annotation.SuppressLint
 import com.web.apps.core.auth.GoogleSignInHelper
 import com.web.apps.core.auth.GoogleSignInResultBus
 import com.web.apps.ui.navigation.WebAppsNavHost
@@ -120,6 +121,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN &&
             event.keyCode == KeyEvent.KEYCODE_TAB &&
