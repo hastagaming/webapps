@@ -190,8 +190,6 @@ fun ContainerListScreen(
                 )
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    if (uiState.ungroupedContainers.isNotEmpty()) {
-                        LazyColumn(modifier = Modifier.fillMaxSize()) {
                     if (uiState.pinnedContainers.isNotEmpty()) {
                         item {
                             GroupSection(

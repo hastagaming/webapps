@@ -30,7 +30,10 @@ class UpdateViewModel @Inject constructor(
         hasStarted = true
 
         viewModelScope.launch {
-            when (val result = updateManager.checkForUpdate()) {
+            val result = withContext(Dispatchers.IO) {
+                updateManager.checkForUpdate()
+            }
+            when (result) {
                 is UpdateCheckResult.UpToDate -> {
                     _uiState.value = _uiState.value.copy(isBusy = false, isUpToDate = true)
                 }
