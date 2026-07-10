@@ -28,13 +28,15 @@ object ContainerModule {
         safeBrowsingChecker: SafeBrowsingChecker,
         sourceInspectorManager: SourceInspectorManager,
         recoveryManager: RecoveryManager,
-        notificationHelper: com.web.apps.core.notification.ContainerNotificationHelper
+        notificationHelper: com.web.apps.core.notification.ContainerNotificationHelper,
+        themePreferenceManager: com.web.apps.core.preferences.ThemePreferenceManager
     ): ContainerWebViewFactory = ContainerWebViewFactory(
         permissionManager,
         safeBrowsingChecker,
         sourceInspectorManager,
         recoveryManager,
-        notificationHelper
+        notificationHelper,
+        themePreferenceManager
     )
 
     @Provides

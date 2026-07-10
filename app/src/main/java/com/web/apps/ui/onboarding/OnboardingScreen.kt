@@ -47,6 +47,7 @@ private val ONBOARDING_PAGES = listOf(
     )
 )
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(
     onFinished: () -> Unit

@@ -20,6 +20,7 @@ import com.web.apps.ui.login.LoginScreen
 import com.web.apps.ui.permission.PermissionManagerScreen
 import com.web.apps.ui.settings.SettingsScreen
 import com.web.apps.ui.update.UpdateScreen
+import kotlinx.coroutines.launch
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -86,9 +87,10 @@ fun WebAppsNavHost(
 
         composable(WebAppsDestinations.ONBOARDING) {
             onUpdateScreenActiveChanged(false)
+            val onboardingScope = androidx.compose.runtime.rememberCoroutineScope()
             com.web.apps.ui.onboarding.OnboardingScreen(
                 onFinished = {
-                    kotlinx.coroutines.MainScope().launch {
+                    onboardingScope.launch {
                         onboardingManager.setOnboardingCompleted()
                     }
                     navController.navigate(WebAppsDestinations.LOGIN) {
