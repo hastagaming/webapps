@@ -398,7 +398,7 @@ private fun GroupSection(
                                         onToggleNotification = { enabled ->
                                              onToggleNotification(container.containerId, enabled)
                                         },
-                                        onTogglePin = { pinned -> onTogglePin(container.containerId, pinned) }
+                                        onTogglePin = { pinned -> onTogglePin(container.containerId, pinned) },
                                         onDelete = { onDelete(container) },
                                         onOpenLockSettings = { onOpenLockSettings(container.containerId) },
                                         onChangeIcon = { path -> onChangeIcon(container.containerId, path) },

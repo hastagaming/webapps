@@ -42,6 +42,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
 
@@ -51,9 +60,6 @@ class MainActivity : ComponentActivity() {
         val initialContainerId = intent.getLongExtra("EXTRA_CONTAINER_ID", -1L).takeIf { it != -1L }
 
         setContent {
-            val themeMode by themePreferenceManager.themeMode.collectAsState(
-                initial = com.web.apps.core.preferences.AppThemeMode.SYSTEM
-            )
             val accentColor by themePreferenceManager.accentColor.collectAsState(initial = null)
             WebAppsTheme(themeMode = themeMode, accentColorHex = accentColor) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
