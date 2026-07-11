@@ -40,6 +40,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Clean Gradle build (avoid stale KSP cache)
+        id: clean_build
         run: ./gradlew clean --no-build-cache
 
       - name: Write google-services.json from secret
@@ -80,7 +81,7 @@ jobs:
           path: app/build/outputs/apk/release/app-release-unsigned.apk
 
       - name: Bump cache version on failure
-        if: failure()
+        if: steps.clean_build.outcome == 'failure'
         run: |
           CURRENT=$(cat .github/cache-version.txt)
           NEW=$((CURRENT + 1))

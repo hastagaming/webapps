@@ -40,7 +40,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.web.apps.core.qr.QrImportResult
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.camera.core.ExperimentalGetImage::class)
 @Composable
 fun QrScanScreen(
     onNavigateBack: () -> Unit,
