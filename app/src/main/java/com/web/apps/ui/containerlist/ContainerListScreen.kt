@@ -26,6 +26,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PlayArrow
@@ -473,6 +475,7 @@ private fun GroupSection(
                                         onOpenLockSettings = { onOpenLockSettings(container.containerId) },
                                         onChangeIcon = { path -> onChangeIcon(container.containerId, path) },
                                         onMoveUp = { onMoveUp(container.containerId) },
+                                        onToggleKeepAlive = { enabled -> onToggleKeepAlive(container.containerId, enabled) },
                                         onMoveDown = { onMoveDown(container.containerId) },
                                         onRequestMoveToGroup = { onRequestMoveToGroup(container) }
                                     )
@@ -580,9 +583,9 @@ private fun ContainerTile(
         ) {
             Icon(
                 imageVector = if (container.isKeepAliveEnabled) {
-                    androidx.compose.material.icons.Icons.Filled.Bolt
+                    Icons.Filled.Bolt
                 } else {
-                    androidx.compose.material.icons.Icons.Outlined.Bolt
+                    Icons.Outlined.Bolt
                 },
                 contentDescription = if (container.isKeepAliveEnabled) "Keep Alive is ON" else "Keep Alive is OFF",
                 tint = if (container.isKeepAliveEnabled) {

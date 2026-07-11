@@ -1,8 +1,12 @@
 package com.web.apps.ui.recovery
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -36,17 +40,24 @@ fun RecoveryDialog(
         },
         confirmButton = {
             TextButton(onClick = onHardReset) {
-                icons(imageVector = Icons.Filled.RestartAlt,
-                      contentDescription = null
+                Icon(
+                    imageVector = Icons.Filled.RestartAlt,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
                 )
-                Text(
-                    text = "Hard Reset (Clear Cache and Data)"
-                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "Hard Reset (Clear Cache and Data)")
             }
         },
         dismissButton = {
             TextButton(onClick = onSoftReset) {
-                Text("Soft Reset (Reload Only)")
+                Icon(
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "Soft Reset (Reload Only)")
             }
         }
     )
