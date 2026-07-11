@@ -171,6 +171,7 @@ class LoginViewModel @Inject constructor(
                     if (authResult is AuthResult.Success) {
                         val signedInEmail = authResult.user.email
                         val expectedEmail = pendingGoogleAccountEmail
+                        val isRegisterModeNow = _uiState.value.isRegisterMode
 
                         if (expectedEmail != null && !signedInEmail.equals(expectedEmail, ignoreCase = true)) {
                             authRepository.signOut()
@@ -182,11 +183,14 @@ class LoginViewModel @Inject constructor(
                             return@launch
                         }
 
-                        val isNewAccountFlow = _uiState.value.isRegisterMode && expectedEmail == null
-
-                        if (!isNewAccountFlow) {
-                            val known = knownAccountManager.knownAccounts
-                            // Only allow sign-in if this account was previously registered via Sign Up
+                        if (!isRegisterModeNow && authResult.isNewUser) {
+                            authRepository.signOut()
+                            pendingGoogleAccountEmail = null
+                            _uiState.value = _uiState.value.copy(
+                                isLoading = false,
+                                errorMessage = "No account signed in on this device."
+                            )
+                            return@launch
                         }
 
                         knownAccountManager.saveAccount(

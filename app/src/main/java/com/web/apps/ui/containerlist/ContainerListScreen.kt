@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Bolt
@@ -729,6 +730,7 @@ private fun AddContainerDialog(
 ) {
     var name by remember { mutableStateOf("") }
     var inputValue by remember { mutableStateOf("") }
+    var searchInputValue by remember { mutableStateOf("") }
     var inputMode by remember { mutableStateOf(ContainerInputMode.URL) }
     var selectedEngine by remember { mutableStateOf(SEARCH_ENGINE_OPTIONS.first()) }
     var engineMenuExpanded by remember { mutableStateOf(false) }
@@ -802,9 +804,23 @@ private fun AddContainerDialog(
                 OutlinedTextField(
                     value = inputValue,
                     onValueChange = { inputValue = it },
-                    label = { Text(if (inputMode == ContainerInputMode.URL) "URL" else "Search Keywords") },
+                    label = { Text("URL") },
                     singleLine = true,
-                    modifier = Modifier.padding(top = 8.dp)
+                    enabled = inputMode == ContainerInputMode.URL,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                )
+
+                OutlinedTextField(
+                    value = searchInputValue,
+                    onValueChange = { searchInputValue = it },
+                    label = { Text("Search Keywords") },
+                    singleLine = true,
+                    enabled = inputMode == ContainerInputMode.SEARCH,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
                 )
 
                 if (errorMessage != null) {
@@ -814,13 +830,15 @@ private fun AddContainerDialog(
         },
         confirmButton = {
             TextButton(onClick = {
-                if (name.isNotBlank() && inputValue.isNotBlank()) {
-                    val finalUrl = if (inputMode == ContainerInputMode.URL) {
-                        inputValue
-                    } else {
-                        val encodedQuery = java.net.URLEncoder.encode(inputValue, "UTF-8")
-                        selectedEngine.urlTemplate + encodedQuery
-                    }
+                val finalUrl = if (inputMode == ContainerInputMode.URL) {
+                    inputValue
+                } else {
+                    val encodedQuery = java.net.URLEncoder.encode(searchInputValue, "UTF-8")
+                    selectedEngine.urlTemplate + encodedQuery
+                }
+                val isValid = if (inputMode == ContainerInputMode.URL) inputValue.isNotBlank() else searchInputValue.isNotBlank()
+
+                if (name.isNotBlank() && isValid) {
                     onConfirm(name, finalUrl)
                 }
             }) {
@@ -904,14 +922,14 @@ private fun AddGroupDialog(
 
                 Column(modifier = Modifier.padding(top = 12.dp)) {
                     Text("Pick a Color")
-                    androidx.compose.foundation.layout.Row(
+                    androidx.compose.foundation.lazy.LazyRow(
                         modifier = Modifier.padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        presetColors.forEach { hex ->
+                        items(presetColors) { hex ->
                             Box(
                                 modifier = Modifier
-                                    .aspectRatio(1f)
+                                    .size(36.dp)
                                     .background(
                                         color = Color(android.graphics.Color.parseColor(hex)),
                                         shape = RoundedCornerShape(50)
@@ -929,7 +947,7 @@ private fun AddGroupDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("cancell") }
+            TextButton(onClick = onDismiss) { Text("cancel") }
         }
     )
 }

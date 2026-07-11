@@ -6,12 +6,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.foundation.background
@@ -45,8 +44,6 @@ import com.web.apps.core.preferences.AppThemeMode
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToUpdate: () -> Unit,
-    onNavigateToQrExport: () -> Unit,
-    onNavigateToQrScan: () -> Unit,
     onNavigateToStatistics: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -109,18 +106,6 @@ fun SettingsScreen(
                 supportingContent = { Text("See how often each container is used") },
                 leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.BarChart, contentDescription = null) },
                 modifier = Modifier.clickable(onClick = onNavigateToStatistics)
-            )
-
-            ListItem(
-                headlineContent = { Text("Export via QR Code") },
-                leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.QrCode, contentDescription = null) },
-                modifier = Modifier.clickable(onClick = onNavigateToQrExport)
-            )
-
-            ListItem(
-                headlineContent = { Text("Import via QR Code") },
-                leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.QrCodeScanner, contentDescription = null) },
-                modifier = Modifier.clickable(onClick = onNavigateToQrScan)
             )
 
             ListItem(
@@ -191,14 +176,14 @@ fun SettingsScreen(
                             showAccentDialog = false
                         }
                     )
-                    Row(
-                        modifier = Modifier.padding(top = 8.dp),
-                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+                    androidx.compose.foundation.lazy.LazyRow(
+                        modifier = Modifier.padding(top = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        presetColors.forEach { hex ->
-                            androidx.compose.foundation.layout.Box(
+                        items(presetColors) { hex ->
+                            Box(
                                 modifier = Modifier
-                                    .aspectRatio(1f)
+                                    .size(36.dp)
                                     .background(
                                         color = Color(android.graphics.Color.parseColor(hex)),
                                         shape = RoundedCornerShape(50)

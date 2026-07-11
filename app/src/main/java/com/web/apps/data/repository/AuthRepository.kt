@@ -11,7 +11,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 sealed class AuthResult {
-    data class Success(val user: FirebaseUser) : AuthResult()
+    data class Success(val user: FirebaseUser, val isNewUser: Boolean = false) : AuthResult()
     data class Failure(val message: String) : AuthResult()
 }
 
@@ -61,7 +61,8 @@ class AuthRepository @Inject constructor(
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val result = firebaseAuth.signInWithCredential(credential).await()
             val user = result.user ?: return AuthResult.Failure("Google sign-in failed. Please try again.")
-            AuthResult.Success(user)
+            val isNewUser = result.additionalUserInfo?.isNewUser ?: false
+            AuthResult.Success(user, isNewUser)
         } catch (e: Exception) {
             AuthResult.Failure(mapAuthErrorMessage(e))
         }

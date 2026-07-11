@@ -144,6 +144,7 @@ class ContainerForegroundService : Service() {
         val stopAllIntent = buildActionPendingIntent(ACTION_STOP_ALL, requestCode = 101)
 
         val restartIntent = buildActionPendingIntent(ACTION_START, requestCode = 200)
+        val exitIntent = buildActionPendingIntent(ACTION_STOP_SERVICE, requestCode = 201)
 
         return NotificationCompat.Builder(this, com.web.apps.WebAppsApplication.CHANNEL_ID_CONTAINER_SERVICE)
             .setContentTitle("WebApps Is Running")
@@ -156,6 +157,7 @@ class ContainerForegroundService : Service() {
             .setDeleteIntent(restartIntent)
             .addAction(0, "Refresh All", refreshAllIntent)
             .addAction(0, "Stop All", stopAllIntent)
+            .addAction(0, "Exit", exitIntent)
             .build()
     }
 
