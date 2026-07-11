@@ -48,6 +48,7 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToUpdate: () -> Unit,
     onNavigateToStatistics: () -> Unit,
+    onNavigateToPlugins: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val fontScalePercent by viewModel.fontScalePercent.collectAsState(initial = 100)
@@ -109,6 +110,13 @@ fun SettingsScreen(
                 supportingContent = { Text("See how often each container is used") },
                 leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.BarChart, contentDescription = null) },
                 modifier = Modifier.clickable(onClick = onNavigateToStatistics)
+            )
+
+            ListItem(
+                headlineContent = { Text("Plugins") },
+                supportingContent = { Text("Browse and apply community themes") },
+                leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.Extension, contentDescription = null) },
+                modifier = Modifier.clickable(onClick = onNavigateToPlugins)
             )
 
             ListItem(

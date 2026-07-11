@@ -33,6 +33,9 @@ class MainActivity : ComponentActivity() {
     lateinit var themePreferenceManager: com.web.apps.core.preferences.ThemePreferenceManager
 
     @Inject
+    lateinit var pluginPreferenceManager: com.web.apps.core.preferences.PluginPreferenceManager
+
+    @Inject
     lateinit var googleSignInResultBus: GoogleSignInResultBus
 
     private val googleSignInLauncher = registerForActivityResult(
@@ -69,7 +72,8 @@ class MainActivity : ComponentActivity() {
                 initial = com.web.apps.core.preferences.AppThemeMode.SYSTEM
             )
             val accentColor by themePreferenceManager.accentColor.collectAsState(initial = null)
-            WebAppsTheme(themeMode = themeMode, accentColorHex = accentColor) {
+            val activePlugin by pluginPreferenceManager.activePlugin.collectAsState(initial = null)
+            WebAppsTheme(themeMode = themeMode, accentColorHex = accentColor, activePlugin = activePlugin) {
                 androidx.compose.foundation.layout.Box {
                     WebAppsNavHost(
                         initialContainerId = initialContainerId,

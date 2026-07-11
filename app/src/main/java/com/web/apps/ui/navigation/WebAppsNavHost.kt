@@ -37,6 +37,7 @@ object WebAppsDestinations {
     const val STATISTICS = "statistics"
     const val CONTAINER_LOCK = "container_lock/{containerId}"
     const val SOURCE_INSPECTOR = "source_inspector/{containerId}"
+    const val PLUGIN_BROWSER = "plugin_browser"
     const val ONBOARDING = "onboarding"
     const val PERMISSION_MANAGER = "permission_manager/{containerId}"
     const val SETTINGS = "settings"
@@ -159,6 +160,11 @@ fun WebAppsNavHost(
             )
         }
 
+        composable(WebAppsDestinations.PLUGIN_BROWSER) {
+            onUpdateScreenActiveChanged(false)
+            com.web.apps.ui.plugin.PluginBrowserScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
         composable(WebAppsDestinations.STATISTICS) {
             onUpdateScreenActiveChanged(false)
             com.web.apps.ui.statistics.StatisticsScreen(
@@ -201,6 +207,7 @@ fun WebAppsNavHost(
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToUpdate = { navController.navigate(WebAppsDestinations.UPDATE_SYSTEM) },
+                onNavigateToPlugins = { navController.navigate(WebAppsDestinations.PLUGIN_BROWSER) },
                 onNavigateToStatistics = { navController.navigate(WebAppsDestinations.STATISTICS) }
             )
         }

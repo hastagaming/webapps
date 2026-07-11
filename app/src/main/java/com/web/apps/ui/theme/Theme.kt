@@ -9,6 +9,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.web.apps.core.plugin.PluginManifest
 import com.web.apps.core.preferences.AppThemeMode
 
 private val DefaultLightColors = lightColorScheme(
@@ -23,6 +24,7 @@ private val DefaultDarkColors = darkColorScheme(
 fun WebAppsTheme(
     themeMode: AppThemeMode = AppThemeMode.SYSTEM,
     accentColorHex: String? = null,
+    activePlugin: PluginManifest? = null,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -35,13 +37,27 @@ fun WebAppsTheme(
         AppThemeMode.DARK -> true
     }
 
+    fun parseColor(hex: String, fallback: Color): Color = try {
+        Color(android.graphics.Color.parseColor(hex))
+    } catch (e: Exception) {
+        fallback
+    }
+
     val colorScheme = when {
+        activePlugin != null && activePlugin.type == "theme" -> {
+            val c = activePlugin.colors
+            darkColorScheme(
+                primary = parseColor(c.primary, Color(0xFF90CAF9)),
+                background = parseColor(c.background, Color(0xFF121212)),
+                surface = parseColor(c.surface, Color(0xFF1E1E1E)),
+                surfaceVariant = parseColor(c.surfaceVariant, Color(0xFF2D2D2D)),
+                onSurface = parseColor(c.onSurface, Color.White),
+                onPrimary = parseColor(c.onPrimary, Color.Black),
+                error = parseColor(c.error, Color(0xFFCF6679))
+            )
+        }
         accentColorHex != null -> {
-            val accent = try {
-                Color(android.graphics.Color.parseColor(accentColorHex))
-            } catch (e: Exception) {
-                if (darkTheme) Color(0xFF90CAF9) else Color(0xFF2196F3)
-            }
+            val accent = parseColor(accentColorHex, if (darkTheme) Color(0xFF90CAF9) else Color(0xFF2196F3))
             if (darkTheme) darkColorScheme(primary = accent) else lightColorScheme(primary = accent)
         }
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
