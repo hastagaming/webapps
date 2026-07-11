@@ -87,6 +87,7 @@ fun WebAppsNavHost(
             )
         }
 
+        @file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
         composable(WebAppsDestinations.ONBOARDING) {
             onUpdateScreenActiveChanged(false)
             val onboardingScope = androidx.compose.runtime.rememberCoroutineScope()
