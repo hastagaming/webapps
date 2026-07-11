@@ -201,8 +201,6 @@ fun WebAppsNavHost(
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToUpdate = { navController.navigate(WebAppsDestinations.UPDATE_SYSTEM) },
-                onNavigateToQrExport = { navController.navigate(WebAppsDestinations.QR_EXPORT) },
-                onNavigateToQrScan = { navController.navigate(WebAppsDestinations.QR_SCAN) },
                 onNavigateToStatistics = { navController.navigate(WebAppsDestinations.STATISTICS) }
             )
         }
@@ -215,16 +213,6 @@ fun WebAppsNavHost(
                     navController.popBackStack()
                 }
             )
-        }
-
-        composable(WebAppsDestinations.QR_EXPORT) {
-            onUpdateScreenActiveChanged(false)
-            com.web.apps.ui.qr.QrExportScreen(onNavigateBack = { navController.popBackStack() })
-        }
-
-        composable(WebAppsDestinations.QR_SCAN) {
-            onUpdateScreenActiveChanged(false)
-            com.web.apps.ui.qr.QrScanScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }
