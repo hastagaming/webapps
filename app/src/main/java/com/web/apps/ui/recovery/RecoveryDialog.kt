@@ -1,5 +1,9 @@
 package com.web.apps.ui.recovery
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,7 +36,12 @@ fun RecoveryDialog(
         },
         confirmButton = {
             TextButton(onClick = onHardReset) {
-                Text("Hard Reset (Clear Cache and Data)")
+                icons(imageVector = Icons.Filled.RestartAlt,
+                      contentDescription = null
+                )
+                Text(
+                    text = "Hard Reset (Clear Cache and Data)"
+                )
             }
         },
         dismissButton = {

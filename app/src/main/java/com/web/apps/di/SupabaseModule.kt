@@ -19,6 +19,12 @@ object SupabaseModule {
         supabaseUrl = "https://ouaxmljxepgvgwgxrcil.supabase.co",
         supabaseKey = "nEbxCD7wstWIJz2Q"
     ) {
+        defaultSerializer = io.github.jan.supabase.serializer.KotlinXSerializer(
+            kotlinx.serialization.json.Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+            }
+        )
         install(Postgrest)
     }
 }

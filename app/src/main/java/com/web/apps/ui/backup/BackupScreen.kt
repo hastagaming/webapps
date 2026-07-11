@@ -30,6 +30,8 @@ import com.web.apps.backup.ImportMergeStrategy
 @Composable
 fun BackupScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToQrExport: () -> Unit,
+    onNavigateToQrScan: () -> Unit,
     viewModel: BackupViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -118,6 +120,24 @@ fun BackupScreen(
                 }
             ) {
                 Text("Import Backup")
+            }
+
+            androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+            Text("Quick Transfer via QR Code", style = MaterialTheme.typography.titleSmall)
+
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                onClick = onNavigateToQrExport
+            ) {
+                Text("Export via QR Code")
+            }
+
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                onClick = onNavigateToQrScan
+            ) {
+                Text("Import via QR Code")
             }
 
             if (uiState.isProcessing) {

@@ -153,7 +153,9 @@ fun WebAppsNavHost(
         composable(WebAppsDestinations.BACKUP) {
             onUpdateScreenActiveChanged(false)
             BackupScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToQrExport = { navController.navigate(WebAppsDestinations.QR_EXPORT) },
+                onNavigateToQrScan = { navController.navigate(WebAppsDestinations.QR_SCAN) }
             )
         }
 

@@ -215,7 +215,7 @@ fun ContainerListScreen(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("New Grup") },
+                        text = { Text("New Group") },
                         onClick = {
                             fabMenuExpanded = false
                             viewModel.onEvent(ContainerListEvent.OpenAddGroupDialog)
@@ -269,6 +269,9 @@ fun ContainerListScreen(
                                 onChangeIcon = { containerId, path ->
                                     viewModel.onEvent(ContainerListEvent.ChangeContainerIcon(containerId, path))
                                 },
+                                onToggleKeepAlive = { containerId, enabled ->
+                                    viewModel.onEvent(ContainerListEvent.ToggleKeepAlive(containerId, enabled))
+                                },
                                 onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
                                 onAddContainer = { },
                                 onOpenLockSettings = { containerId -> onNavigateToLockSettings(containerId) },
@@ -297,6 +300,9 @@ fun ContainerListScreen(
                                 onTogglePin = { containerId, pinned ->
                                     viewModel.onEvent(ContainerListEvent.TogglePin(containerId, pinned))
                                 },
+                                onToggleKeepAlive = { containerId, enabled ->
+                                    viewModel.onEvent(ContainerListEvent.ToggleKeepAlive(containerId, enabled))
+                                },
                                 onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
                                 onAddContainer = {
                                     viewModel.onEvent(ContainerListEvent.OpenAddContainerDialog(groupId = null))
@@ -324,6 +330,9 @@ fun ContainerListScreen(
                             onRequestMoveToGroup = { container -> containerForGroupMove = container },
                             onToggleNotification = { containerId, enabled ->
                                 viewModel.onEvent(ContainerListEvent.ToggleNotification(containerId, enabled))
+                            },
+                            onToggleKeepAlive = { containerId, enabled ->
+                                viewModel.onEvent(ContainerListEvent.ToggleKeepAlive(containerId, enabled))
                             },
                             onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
                             onAddContainer = {
@@ -413,6 +422,7 @@ private fun GroupSection(
     onStop: (Long) -> Unit,
     onDelete: (com.web.apps.data.local.entity.ContainerEntity) -> Unit,
     onAddContainer: () -> Unit,
+    onToggleKeepAlive: (Long, Boolean) -> Unit,
     onOpenLockSettings: (Long) -> Unit,
     onChangeIcon: (Long, String) -> Unit,
     onMoveUp: (Long) -> Unit,
@@ -500,6 +510,7 @@ private fun ContainerTile(
     onChangeIcon: (String) -> Unit,
     onMoveUp: () -> Unit,
     onTogglePin: (Boolean) -> Unit,
+    onToggleKeepAlive: (Boolean) -> Unit,
     onMoveDown: () -> Unit,
     onRequestMoveToGroup: () -> Unit
 ) {
@@ -559,6 +570,28 @@ private fun ContainerTile(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+
+        IconButton(
+            onClick = { onToggleKeepAlive(!container.isKeepAliveEnabled) },
+            modifier = Modifier
+                .align(androidx.compose.ui.Alignment.TopEnd)
+                .size(28.dp)
+        ) {
+            Icon(
+                imageVector = if (container.isKeepAliveEnabled) {
+                    androidx.compose.material.icons.Icons.Filled.Bolt
+                } else {
+                    androidx.compose.material.icons.Icons.Outlined.Bolt
+                },
+                contentDescription = if (container.isKeepAliveEnabled) "Keep Alive is ON" else "Keep Alive is OFF",
+                tint = if (container.isKeepAliveEnabled) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                },
+                modifier = Modifier.size(18.dp)
+            )
         }
 
         DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
@@ -803,7 +836,12 @@ private fun AddGroupDialog(
     onDismiss: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    val presetColors = listOf("#2196F3", "#4CAF50", "#FF9800", "#E91E63", "#9C27B0")
+    val presetColors = listOf(
+        "#F44336", "#E91E63", "#9C27B0", "#673AB7",
+        "#3F51B5", "#2196F3", "#03A9F4", "#00BCD4",
+        "#009688", "#4CAF50", "#8BC34A", "#CDDC39",
+        "#FFEB3B", "#FFC107", "#FF9800", "#795548"
+    )
     var selectedColor by remember { mutableStateOf(presetColors.first()) }
     var pickedIconPath by remember { mutableStateOf<String?>(null) }
 
