@@ -22,15 +22,19 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Cache Gradle packages
+      - name: Read cache version
+        id: cacheversion
+        run: echo "version=$(cat .github/cache-version.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Gradle
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-v5-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: gradle-v${{ steps.cacheversion.outputs.version }}-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            gradle-v5-${{ runner.os }}-
+            gradle-v${{ steps.cacheversion.outputs.version }}-${{ runner.os }}-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -74,3 +78,15 @@ jobs:
         with:
           name: webapps-unsigned-apk
           path: app/build/outputs/apk/release/app-release-unsigned.apk
+
+      - name: Bump cache version on failure
+        if: failure()
+        run: |
+          CURRENT=$(cat .github/cache-version.txt)
+          NEW=$((CURRENT + 1))
+          echo "$NEW" > .github/cache-version.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/cache-version.txt
+          git commit -m "chore: bump gradle cache version to v$NEW (auto, build failed)"
+          git push https://x-access-token:${{ secrets.AUTO_TAG_PAT }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref_name }}

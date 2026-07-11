@@ -1,3 +1,4 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 package com.web.apps.ui.navigation
 
 import androidx.compose.runtime.Composable
@@ -87,7 +88,6 @@ fun WebAppsNavHost(
             )
         }
 
-        @file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
         composable(WebAppsDestinations.ONBOARDING) {
             onUpdateScreenActiveChanged(false)
             val onboardingScope = androidx.compose.runtime.rememberCoroutineScope()

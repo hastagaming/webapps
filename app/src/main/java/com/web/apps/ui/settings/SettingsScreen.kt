@@ -10,7 +10,9 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row

@@ -36,11 +36,22 @@ jobs:
           token: ${{ secrets.AUTO_TAG_PAT }}
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Determine next version tag
-        id: next_version
+      - name: Check if commit already tagged
+        id: check_existing
         run: |
           git fetch --tags
+          EXISTING_TAG=$(git tag --points-at HEAD | grep '^v' | head -n 1)
+          if [ -n "$EXISTING_TAG" ]; then
+            echo "Commit already has tag $EXISTING_TAG. Skipping."
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+          fi
 
+      - name: Determine next version tag
+        id: next_version
+        if: steps.check_existing.outputs.should_skip == 'false'
+        run: |
           LATEST_TAG=$(git tag --list 'v*.*.*' --sort=-v:refname | head -n 1)
 
           if [ -z "$LATEST_TAG" ]; then
@@ -75,6 +86,7 @@ jobs:
           echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Create and push new tag
+        if: steps.check_existing.outputs.should_skip == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -83,5 +95,6 @@ jobs:
           git push origin "${{ steps.next_version.outputs.new_tag }}"
 
       - name: Summary
+        if: steps.check_existing.outputs.should_skip == 'false'
         run: |
           echo "### New version tag created: ${{ steps.next_version.outputs.new_tag }}" >> "$GITHUB_STEP_SUMMARY"
