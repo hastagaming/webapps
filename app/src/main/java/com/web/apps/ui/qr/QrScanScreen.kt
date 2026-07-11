@@ -2,6 +2,7 @@ package com.web.apps.ui.qr
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.annotation.SuppressLint
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -40,7 +41,8 @@ import com.google.mlkit.vision.common.InputImage
 import com.web.apps.core.qr.QrImportResult
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, androidx.camera.core.ExperimentalGetImage::class)
+@SuppressLint("UnsafeOptInUsageError")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QrScanScreen(
     onNavigateBack: () -> Unit,
