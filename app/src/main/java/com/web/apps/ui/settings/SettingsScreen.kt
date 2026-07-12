@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.default.Extension
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
@@ -115,7 +116,7 @@ fun SettingsScreen(
             ListItem(
                 headlineContent = { Text("Plugins") },
                 supportingContent = { Text("Browse and apply community themes") },
-                leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.Extension, contentDescription = null) },
+                leadingContent = { Icon(Icons.Default.Extension, contentDescription = null) },
                 modifier = Modifier.clickable(onClick = onNavigateToPlugins)
             )
 

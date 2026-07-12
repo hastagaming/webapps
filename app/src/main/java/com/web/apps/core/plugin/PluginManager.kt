@@ -35,7 +35,7 @@ class PluginManager @Inject constructor() {
             }
 
             val body = connection.inputStream.bufferedReader().use { it.readText() }
-            val catalog = toml.decodeFromString<PluginCatalog>(body)
+            val catalog = toml.decodeFromString(PluginCatalog.serializer(), body)
             PluginResult.Success(catalog.plugins)
         } catch (e: Exception) {
             PluginResult.Failure(e.message ?: "Failed to load plugin catalog.")
@@ -73,7 +73,7 @@ class PluginManager @Inject constructor() {
                 while (entry != null) {
                     if (entry.name == "manifest.toml") {
                         val tomlString = zip.bufferedReader().readText()
-                        val manifest = toml.decodeFromString<PluginManifest>(tomlString)
+                        val manifest = toml.decodeFromString(PluginManifest.serializer(), tomlString)
                         return@withContext PluginResult.Success(manifest)
                     }
                     entry = zip.nextEntry

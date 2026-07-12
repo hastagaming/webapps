@@ -22,7 +22,7 @@ class PluginPreferenceManager @Inject constructor(
     val activePlugin: Flow<PluginManifest?> = context.pluginDataStore.data.map { prefs ->
         val raw = prefs[ACTIVE_PLUGIN_KEY] ?: return@map null
         try {
-            Toml.decodeFromString<PluginManifest>(raw)
+            Toml.decodeFromString(PluginManifest.serializer(), raw)
         } catch (e: Exception) {
             null
         }
@@ -33,7 +33,7 @@ class PluginPreferenceManager @Inject constructor(
             if (manifest == null) {
                 prefs.remove(ACTIVE_PLUGIN_KEY)
             } else {
-                prefs[ACTIVE_PLUGIN_KEY] = Toml.encodeToString(manifest)
+                prefs[ACTIVE_PLUGIN_KEY] = Toml.encodeToString(PluginManifest.serializer(), manifest)
             }
         }
     }
