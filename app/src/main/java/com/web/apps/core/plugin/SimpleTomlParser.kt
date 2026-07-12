@@ -2,6 +2,41 @@ package com.web.apps.core.plugin
 
 object SimpleTomlParser {
 
+    fun parseSectioned(text: String): Map<String, Map<String, String>> {
+        val result = mutableMapOf<String, MutableMap<String, String>>()
+        var currentSection = ""
+        result[currentSection] = mutableMapOf()
+
+        text.lines().forEach { rawLine ->
+            val line = rawLine.trim()
+            if (line.isBlank() || line.startsWith("#")) return@forEach
+
+            if (line.startsWith("[") && line.endsWith("]") && !line.contains("=")) {
+                currentSection = line.removePrefix("[").removeSuffix("]").trim()
+                result.getOrPut(currentSection) { mutableMapOf() }
+                return@forEach
+            }
+
+            val separatorIndex = line.indexOf('=')
+            if (separatorIndex == -1) return@forEach
+
+            val key = line.substring(0, separatorIndex).trim()
+            var value = line.substring(separatorIndex + 1).trim()
+
+            if (value.startsWith("\"") && value.endsWith("\"") && value.length >= 2) {
+                value = value.substring(1, value.length - 1)
+            }
+
+            result.getOrPut(currentSection) { mutableMapOf() }[key] = value
+        }
+
+        return result
+    }
+
+    fun parseFlat(text: String): Map<String, String> {
+        return parseSectioned(text)[""] ?: emptyMap()
+    }
+
     fun parseInlineTableArray(text: String, arrayKey: String): List<Map<String, String>> {
         val startMarker = "$arrayKey = ["
         val startIndex = text.indexOf(startMarker)
