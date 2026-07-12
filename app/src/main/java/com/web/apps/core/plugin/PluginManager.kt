@@ -16,7 +16,7 @@ sealed class PluginResult<out T> {
     data class Failure(val message: String) : PluginResult<Nothing>()
 }
 
-private const val CATALOG_URL = "https://raw.githubusercontent.com/hastagaming/WebApps-plugin/main/index.json"
+private const val CATALOG_URL = "https://raw.githubusercontent.com/hastagaming/WebApps-plugin/main/index.toml"
 
 @Singleton
 class PluginManager @Inject constructor() {
