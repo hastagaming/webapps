@@ -12,8 +12,9 @@ import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.filled.CloudDone
-import androidx.compose.material.icons.default.Extension
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.ui.res.painterResource
+import com.web.apps.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
@@ -116,7 +117,12 @@ fun SettingsScreen(
             ListItem(
                 headlineContent = { Text("Plugins") },
                 supportingContent = { Text("Browse and apply community themes") },
-                leadingContent = { Icon(Icons.Default.Extension, contentDescription = null) },
+                leadingContent = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_plugin),
+                        contentDescription = null
+                    )
+                },
                 modifier = Modifier.clickable(onClick = onNavigateToPlugins)
             )
 
