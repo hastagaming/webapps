@@ -109,12 +109,11 @@ class LoginViewModel @Inject constructor(
             }
             KnownAccountType.GOOGLE -> {
                 pendingGoogleAccountEmail = account.email
-                _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
                 val webClientId = appContext.getString(R.string.default_web_client_id)
                 googleSignInHelper.initializeGoogleSignIn(appContext, webClientId)
-                // Signal the Activity layer via a dedicated flag; handled by LoginScreen's onGoogleSignInRequested
                 _uiState.value = _uiState.value.copy(
-                    isLoading = false,
+                    isLoading = true,
+                    errorMessage = null,
                     pendingAccountEmail = account.email
                 )
             }
@@ -123,6 +122,11 @@ class LoginViewModel @Inject constructor(
 
     fun requestGoogleInteractiveForAccount(email: String?) {
         pendingGoogleAccountEmail = email
+    }
+
+    fun beginGoogleInteractiveSignIn() {
+        pendingGoogleAccountEmail = null
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
     }
 
     private fun submitEmailAuth() {

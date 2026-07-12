@@ -122,7 +122,7 @@ fun LoginScreen(
                 onPasswordVisibilityToggle = { passwordVisible = !passwordVisible },
                 onEvent = { viewModel.onEvent(it) },
                 onGoogleSignInClick = {
-                    viewModel.requestGoogleInteractiveForAccount(null)
+                    viewModel.beginGoogleInteractiveSignIn()
                     onGoogleSignInRequested(webClientId)
                 },
                 modifier = Modifier.padding(paddingValues)

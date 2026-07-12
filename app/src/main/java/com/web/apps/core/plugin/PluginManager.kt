@@ -3,7 +3,6 @@ package com.web.apps.core.plugin
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.akuleshov7.ktoml.Toml
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -16,19 +15,19 @@ sealed class PluginResult<out T> {
     data class Failure(val message: String) : PluginResult<Nothing>()
 }
 
+private const val LIST_URL = "https://raw.githubusercontent.com/hastagaming/WebApps-plugin/main/plugins-list.txt"
+private const val CATALOG_BASE_URL = "https://raw.githubusercontent.com/hastagaming/WebApps-plugin/main/catalog"
+private const val INDEX_URL = "https://raw.githubusercontent.com/hastagaming/WebApps-plugin/main/index.toml"
 private const val PLUGIN_BASE_URL = "https://raw.githubusercontent.com/hastagaming/WebApps-plugin/main/plugins"
-
-private const val CATALOG_URL = "https://raw.githubusercontent.com/hastagaming/WebApps-plugin/main/index.toml"
 
 @Singleton
 class PluginManager @Inject constructor() {
 
-    private val toml = Toml
+    private val KNOWN_PLUGIN_TYPES = listOf("theme", "ui")
 
     suspend fun fetchCatalog(): PluginResult<List<PluginCatalogEntry>> = withContext(Dispatchers.IO) {
         try {
-            val connection = URL(CATALOG_URL).openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
+            val connection = URL(INDEX_URL).openConnection() as HttpURLConnection
             connection.connectTimeout = 15000
             connection.readTimeout = 15000
 
@@ -37,19 +36,28 @@ class PluginManager @Inject constructor() {
             }
 
             val body = connection.inputStream.bufferedReader().use { it.readText() }
-            val catalog = toml.decodeFromString(PluginCatalog.serializer(), body)
-            val entries = catalog.plugins.map { (id, raw) ->
-                PluginCatalogEntry(
-                    id = id,
-                    name = raw.name,
-                    description = raw.description,
-                    author = raw.author,
-                    version = raw.version,
-                    type = raw.type,
-                    downloadUrl = "$PLUGIN_BASE_URL/$id.wp",
-                    previewColorHex = raw.previewColorHex
-                )
+
+            val entries = mutableListOf<PluginCatalogEntry>()
+
+            for (type in KNOWN_PLUGIN_TYPES) {
+                val typeEntries = SimpleTomlParser.parseInlineTableArray(body, type)
+                typeEntries.forEach { fields ->
+                    val id = fields["id"] ?: return@forEach
+                    entries.add(
+                        PluginCatalogEntry(
+                            id = id,
+                            name = fields["name"] ?: id,
+                            description = fields["description"] ?: "",
+                            author = fields["author"] ?: "",
+                            version = fields["version"] ?: "1.0.0",
+                            type = type,
+                            downloadUrl = "$PLUGIN_BASE_URL/$id.wp",
+                            previewColorHex = fields["previewColorHex"]
+                        )
+                    )
+                }
             }
+
             PluginResult.Success(entries)
         } catch (e: Exception) {
             PluginResult.Failure(e.message ?: "Failed to load plugin catalog.")
@@ -87,7 +95,35 @@ class PluginManager @Inject constructor() {
                 while (entry != null) {
                     if (entry.name == "manifest.toml") {
                         val tomlString = zip.bufferedReader().readText()
-                        val manifest = toml.decodeFromString(PluginManifest.serializer(), tomlString)
+                        val sections = SimpleTomlParser.parseSectioned(tomlString)
+                        val root = sections[""] ?: emptyMap()
+                        val colorsSection = sections["colors"] ?: emptyMap()
+                        val uiTweaksSection = sections["uiTweaks"] ?: emptyMap()
+
+                        val colors = PluginColors(
+                            primary = colorsSection["primary"] ?: "#90CAF9",
+                            background = colorsSection["background"] ?: "#121212",
+                            surface = colorsSection["surface"] ?: "#1E1E1E",
+                            surfaceVariant = colorsSection["surfaceVariant"] ?: "#2D2D2D",
+                            onSurface = colorsSection["onSurface"] ?: "#FFFFFF",
+                            onPrimary = colorsSection["onPrimary"] ?: "#000000",
+                            error = colorsSection["error"] ?: "#CF6679"
+                        )
+
+                        val uiTweaks = PluginUiTweaks(
+                            cornerRadiusDp = uiTweaksSection["cornerRadiusDp"]?.toIntOrNull() ?: 12,
+                            gridMinTileWidthDp = uiTweaksSection["gridMinTileWidthDp"]?.toIntOrNull() ?: 100
+                        )
+
+                        val manifest = PluginManifest(
+                            id = root["id"] ?: "",
+                            name = root["name"] ?: "",
+                            version = root["version"] ?: "1.0.0",
+                            type = root["type"] ?: "theme",
+                            colors = colors,
+                            uiTweaks = uiTweaks
+                        )
+
                         return@withContext PluginResult.Success(manifest)
                     }
                     entry = zip.nextEntry

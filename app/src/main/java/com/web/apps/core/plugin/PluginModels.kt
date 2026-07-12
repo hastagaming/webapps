@@ -1,34 +1,16 @@
 package com.web.apps.core.plugin
 
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class PluginCatalogEntryRaw(
-    val name: String,
-    val description: String,
-    val author: String,
-    val version: String,
-    val type: String,
-    val previewColorHex: String? = null
-)
-
-@Serializable
-data class PluginCatalog(
-    val plugins: Map<String, PluginCatalogEntryRaw> = emptyMap()
-)
-
 data class PluginCatalogEntry(
     val id: String,
     val name: String,
     val description: String,
     val author: String,
     val version: String,
-    val downloadUrl: String,
     val type: String,
+    val downloadUrl: String,
     val previewColorHex: String? = null
 )
 
-@Serializable
 data class PluginColors(
     val primary: String,
     val background: String,
@@ -39,13 +21,11 @@ data class PluginColors(
     val error: String
 )
 
-@Serializable
 data class PluginUiTweaks(
     val cornerRadiusDp: Int = 12,
     val gridMinTileWidthDp: Int = 100
 )
 
-@Serializable
 data class PluginManifest(
     val id: String,
     val name: String,
