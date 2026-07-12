@@ -16,6 +16,8 @@ sealed class PluginResult<out T> {
     data class Failure(val message: String) : PluginResult<Nothing>()
 }
 
+private const val PLUGIN_BASE_URL = "https://raw.githubusercontent.com/hastagaming/WebApps-plugin/main/plugins"
+
 private const val CATALOG_URL = "https://raw.githubusercontent.com/hastagaming/WebApps-plugin/main/index.toml"
 
 @Singleton
@@ -36,7 +38,19 @@ class PluginManager @Inject constructor() {
 
             val body = connection.inputStream.bufferedReader().use { it.readText() }
             val catalog = toml.decodeFromString(PluginCatalog.serializer(), body)
-            PluginResult.Success(catalog.plugins)
+            val entries = catalog.plugins.map { (id, raw) ->
+                PluginCatalogEntry(
+                    id = id,
+                    name = raw.name,
+                    description = raw.description,
+                    author = raw.author,
+                    version = raw.version,
+                    type = raw.type,
+                    downloadUrl = "$PLUGIN_BASE_URL/$id.wp",
+                    previewColorHex = raw.previewColorHex
+                )
+            }
+            PluginResult.Success(entries)
         } catch (e: Exception) {
             PluginResult.Failure(e.message ?: "Failed to load plugin catalog.")
         }
