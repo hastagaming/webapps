@@ -46,7 +46,9 @@ class PluginPreferenceManager @Inject constructor(
                 ),
                 uiTweaks = PluginUiTweaks(
                     cornerRadiusDp = uiTweaksSection["cornerRadiusDp"]?.toIntOrNull() ?: 12,
-                    gridMinTileWidthDp = uiTweaksSection["gridMinTileWidthDp"]?.toIntOrNull() ?: 100
+                    gridMinTileWidthDp = uiTweaksSection["gridMinTileWidthDp"]?.toIntOrNull() ?: 100,
+                    fabPosition = uiTweaksSection["fabPosition"] ?: "end",
+                    showSearchBar = uiTweaksSection["showSearchBar"]?.toBooleanStrictOrNull() ?: true
                 )
             )
         } catch (e: Exception) {
@@ -75,6 +77,8 @@ class PluginPreferenceManager @Inject constructor(
                     appendLine("[uiTweaks]")
                     appendLine("cornerRadiusDp = ${manifest.uiTweaks.cornerRadiusDp}")
                     appendLine("gridMinTileWidthDp = ${manifest.uiTweaks.gridMinTileWidthDp}")
+                    appendLine("fabPosition = \"${manifest.uiTweaks.fabPosition}\"")
+                    appendLine("showSearchBar = ${manifest.uiTweaks.showSearchBar}")
                 }
                 prefs[ACTIVE_PLUGIN_KEY] = encoded
             }

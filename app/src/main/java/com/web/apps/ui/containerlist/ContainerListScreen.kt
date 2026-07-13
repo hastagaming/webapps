@@ -88,6 +88,7 @@ fun ContainerListScreen(
     onSignOut: () -> Unit = {},
     viewModel: ContainerListViewModel = hiltViewModel()
 ) {
+    val uiTweaks by viewModel.activePluginUiTweaks.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -102,6 +103,11 @@ fun ContainerListScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButtonPosition = when (uiTweaks.fabPosition) {
+            "start" -> androidx.compose.material3.FabPosition.Start
+            "center" -> androidx.compose.material3.FabPosition.Center
+            else -> androidx.compose.material3.FabPosition.End
+        },
         topBar = {
             TopAppBar(
                 title = {
@@ -233,16 +239,18 @@ fun ContainerListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = { viewModel.onEvent(ContainerListEvent.SearchQueryChanged(it)) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                label = { Text("Search Container") },
-                singleLine = true
-            )
+            if (uiTweaks.showSearchBar) {
+                OutlinedTextField(
+                    value = uiState.searchQuery,
+                    onValueChange = { viewModel.onEvent(ContainerListEvent.SearchQueryChanged(it)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                    label = { Text("Search Container") },
+                    singleLine = true
+                )
+            }
 
             if (uiState.isSearching) {
                 SearchResultsList(
@@ -260,6 +268,7 @@ fun ContainerListScreen(
                                 groupName = "Pinned",
                                 groupColor = MaterialTheme.colorScheme.primaryContainer,
                                 containers = uiState.pinnedContainers,
+                                gridMinTileWidthDp: Int = 100,
                                 onContainerClick = onContainerClick,
                                 onRefresh = { viewModel.onEvent(ContainerListEvent.RefreshContainer(it)) },
                                 onStop = { viewModel.onEvent(ContainerListEvent.StopContainer(it)) },
@@ -290,6 +299,7 @@ fun ContainerListScreen(
                             GroupSection(
                                 groupName = "Without Group",
                                 groupColor = MaterialTheme.colorScheme.surfaceVariant,
+                                gridMinTileWidthDp: Int = 100,
                                 containers = uiState.ungroupedContainers,
                                 onContainerClick = onContainerClick,
                                 onRefresh = { viewModel.onEvent(ContainerListEvent.RefreshContainer(it)) },
@@ -324,6 +334,7 @@ fun ContainerListScreen(
                         GroupSection(
                             groupName = group.name,
                             groupColor = Color(android.graphics.Color.parseColor(group.colorHex)),
+                            gridMinTileWidthDp: Int = 100,
                             containers = uiState.containersByGroup[group.groupId].orEmpty(),
                             onContainerClick = onContainerClick,
                             onRefresh = { viewModel.onEvent(ContainerListEvent.RefreshContainer(it)) },
@@ -418,9 +429,11 @@ fun ContainerListScreen(
 @Composable
 private fun GroupSection(
     groupName: String,
+    gridMinTileWidthDp: Int = 100,
     groupColor: androidx.compose.ui.graphics.Color,
     containers: List<com.web.apps.data.local.entity.ContainerEntity>,
     onContainerClick: (Long) -> Unit,
+    cornerRadiusDp: Int = 12,
     onRefresh: (Long) -> Unit,
     onStop: (Long) -> Unit,
     onDelete: (com.web.apps.data.local.entity.ContainerEntity) -> Unit,
@@ -451,7 +464,7 @@ private fun GroupSection(
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp)
         ) {
-            val minTileWidth = 100.dp
+            val minTileWidth = gridMinTileWidthDp.dp
             val columnCount = (maxWidth / minTileWidth).toInt().coerceAtLeast(2)
 
             val allItems: List<ContainerEntity?> = containers + listOf(null)
@@ -506,6 +519,7 @@ private fun GroupSection(
 private fun ContainerTile(
     container: ContainerEntity,
     onClick: () -> Unit,
+    cornerRadiusDp: Int = 12,
     onRefresh: () -> Unit,
     onStop: () -> Unit,
     onToggleNotification: (Boolean) -> Unit,
@@ -534,6 +548,7 @@ private fun ContainerTile(
 
     Box(modifier = Modifier.padding(4.dp)) {
         Card(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(cornerRadiusDp.dp),
             modifier = Modifier
                 .aspectRatio(1f)
                 .combinedClickable(

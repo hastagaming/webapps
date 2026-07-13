@@ -23,7 +23,9 @@ data class PluginColors(
 
 data class PluginUiTweaks(
     val cornerRadiusDp: Int = 12,
-    val gridMinTileWidthDp: Int = 100
+    val gridMinTileWidthDp: Int = 100,
+    val fabPosition: String = "end",
+    val showSearchBar: Boolean = true
 )
 
 data class PluginManifest(

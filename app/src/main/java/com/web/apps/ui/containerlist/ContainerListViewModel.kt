@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.web.apps.data.repository.ContainerRepository
 import com.web.apps.data.repository.GroupRepository
 import com.web.apps.service.ContainerServiceController
+import com.web.apps.core.preferences.PluginPreferenceManager
 import com.web.apps.data.repository.AuthRepository
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.stateIn
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -25,7 +27,8 @@ class ContainerListViewModel @Inject constructor(
     private val groupRepository: GroupRepository,
     private val serviceController: ContainerServiceController,
     private val containerManager: com.web.apps.core.container.ContainerManager,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    pluginPreferenceManager: PluginPreferenceManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ContainerListUiState())

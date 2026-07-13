@@ -112,7 +112,9 @@ class PluginManager @Inject constructor() {
 
                         val uiTweaks = PluginUiTweaks(
                             cornerRadiusDp = uiTweaksSection["cornerRadiusDp"]?.toIntOrNull() ?: 12,
-                            gridMinTileWidthDp = uiTweaksSection["gridMinTileWidthDp"]?.toIntOrNull() ?: 100
+                            gridMinTileWidthDp = uiTweaksSection["gridMinTileWidthDp"]?.toIntOrNull() ?: 100,
+                            fabPosition = uiTweaksSection["fabPosition"] ?: "end",
+                            showSearchBar = uiTweaksSection["showSearchBar"]?.toBooleanStrictOrNull() ?: true
                         )
 
                         val manifest = PluginManifest(
