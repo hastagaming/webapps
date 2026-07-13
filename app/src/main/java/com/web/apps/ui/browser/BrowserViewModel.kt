@@ -169,10 +169,5 @@ class BrowserViewModel @Inject constructor(
         if (elapsed > 0) {
             containerRepository.addUsageMillis(containerId, elapsed)
         }
-
-        val container = _uiState.value.container
-        if (container?.isKeepAliveEnabled != true) {
-            containerManager.stopContainer(containerId)
-        }
     }
 }

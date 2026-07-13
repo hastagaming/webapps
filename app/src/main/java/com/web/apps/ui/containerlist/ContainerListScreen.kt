@@ -165,47 +165,57 @@ fun ContainerListScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onNavigateToBackup() }) {
-                        Icon(Icons.Filled.CloudUpload, contentDescription = "Backup & Restore")
+                    if (uiTweaks.showBackupButton) {
+                         IconButton(onClick = { onNavigateToBackup() }) {
+                             Icon(Icons.Filled.CloudUpload, contentDescription = "Backup & Restore")
+                         }
                     }
-                    IconButton(onClick = {
-                        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
-                        onSignOut()
-                    }) {
-                        Icon(androidx.compose.material.icons.Icons.Filled.Logout, contentDescription = "Sign Out")
+                    if (uiTweaks.showSignOutButton) {
+                         IconButton(onClick = {
+                             com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                             onSignOut()
+                         }) {
+                             Icon(androidx.compose.material.icons.Icons.Filled.Logout, contentDescription = "Sign Out")
+                         }
                     }
-                    IconButton(onClick = { onNavigateToSettings() }) {
-                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                    if (uiTweaks.showSettingsButton) {
+                         IconButton(onClick = { onNavigateToSettings() }) {
+                             Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                         }
                     }
-                    IconButton(onClick = {
-                        val activeCount = viewModel.getActiveSessionCount()
-                        if (activeCount == 0) {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("No active containers to refresh. Open a container first.")
-                            }
-                        } else {
-                            viewModel.onEvent(ContainerListEvent.RefreshAll)
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Refreshed $activeCount container(s)")
-                            }
-                        }
-                    }) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Refresh All")
+                    if (uiTweaks.showRefreshAllButton) {
+                         IconButton(onClick = {
+                             val activeCount = viewModel.getActiveSessionCount()
+                             if (activeCount == 0) {
+                                 coroutineScope.launch {
+                                     snackbarHostState.showSnackbar("No active containers to refresh. Open a container first.")
+                                 }
+                             } else {
+                                 viewModel.onEvent(ContainerListEvent.RefreshAll)
+                                 coroutineScope.launch {
+                                     snackbarHostState.showSnackbar("Refreshed $activeCount container(s)")
+                                 }
+                             }
+                         }) {
+                             Icon(Icons.Filled.Refresh, contentDescription = "Refresh All")
+                         }
                     }
-                    IconButton(onClick = {
-                        val activeCount = viewModel.getActiveSessionCount()
-                        if (activeCount == 0) {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("No active containers to stop.")
-                            }
-                        } else {
-                            viewModel.onEvent(ContainerListEvent.StopAll)
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Stopped $activeCount container(s)")
-                            }
-                        }
-                    }) {
-                        Icon(Icons.Filled.Stop, contentDescription = "Stop All")
+                    if (uiTweaks.showStopAllButton) {
+                         IconButton(onClick = {
+                             val activeCount = viewModel.getActiveSessionCount()
+                             if (activeCount == 0) {
+                                 coroutineScope.launch {
+                                     snackbarHostState.showSnackbar("No active containers to stop.")
+                                 }
+                             } else {
+                                 viewModel.onEvent(ContainerListEvent.StopAll)
+                                 coroutineScope.launch {
+                                     snackbarHostState.showSnackbar("Stopped $activeCount container(s)")
+                                 }
+                             }
+                         }) {
+                             Icon(Icons.Filled.Stop, contentDescription = "Stop All")
+                         }
                     }
                 }
             )
@@ -262,7 +272,7 @@ fun ContainerListScreen(
                 )
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    if (uiState.pinnedContainers.isNotEmpty()) {
+                    if (uiTweaks.showPinnedSection && uiState.pinnedContainers.isNotEmpty()) {
                         item {
                             GroupSection(
                                 groupName = "Pinned",

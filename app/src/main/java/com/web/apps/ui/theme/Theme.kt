@@ -24,7 +24,7 @@ private val DefaultDarkColors = darkColorScheme(
 fun WebAppsTheme(
     themeMode: AppThemeMode = AppThemeMode.SYSTEM,
     accentColorHex: String? = null,
-    activePlugin: PluginManifest? = null,
+    activeThemePlugin: PluginManifest? = null,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -44,8 +44,8 @@ fun WebAppsTheme(
     }
 
     val colorScheme = when {
-        activePlugin != null && activePlugin.type == "theme" -> {
-            val c = activePlugin.colors
+        activeThemePlugin?.colors != null -> {
+            val c = activeThemePlugin.colors
             darkColorScheme(
                 primary = parseColor(c.primary, Color(0xFF90CAF9)),
                 background = parseColor(c.background, Color(0xFF121212)),

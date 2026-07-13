@@ -72,8 +72,8 @@ class MainActivity : ComponentActivity() {
                 initial = com.web.apps.core.preferences.AppThemeMode.SYSTEM
             )
             val accentColor by themePreferenceManager.accentColor.collectAsState(initial = null)
-            val activePlugin by pluginPreferenceManager.activePlugin.collectAsState(initial = null)
-            WebAppsTheme(themeMode = themeMode, accentColorHex = accentColor, activePlugin = activePlugin) {
+            val activeThemePlugin by pluginPreferenceManager.activeThemePlugin.collectAsState(initial = null)
+            WebAppsTheme(themeMode = themeMode, accentColorHex = accentColor, activeThemePlugin = activeThemePlugin) {
                 androidx.compose.foundation.layout.Box {
                     WebAppsNavHost(
                         initialContainerId = initialContainerId,

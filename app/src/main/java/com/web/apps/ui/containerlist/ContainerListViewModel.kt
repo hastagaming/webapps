@@ -41,7 +41,7 @@ class ContainerListViewModel @Inject constructor(
     }
 
     val activePluginUiTweaks: StateFlow<com.web.apps.core.plugin.PluginUiTweaks> =
-        pluginPreferenceManager.activePlugin
+        pluginPreferenceManager.activeUiPlugin
             .map { it?.uiTweaks ?: com.web.apps.core.plugin.PluginUiTweaks() }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.web.apps.core.plugin.PluginUiTweaks())
 

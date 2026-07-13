@@ -25,7 +25,14 @@ data class PluginUiTweaks(
     val cornerRadiusDp: Int = 12,
     val gridMinTileWidthDp: Int = 100,
     val fabPosition: String = "end",
-    val showSearchBar: Boolean = true
+    val showSearchBar: Boolean = true,
+    val showBackupButton: Boolean = true,
+    val showSignOutButton: Boolean = true,
+    val showSettingsButton: Boolean = true,
+    val showRefreshAllButton: Boolean = true,
+    val showStopAllButton: Boolean = true,
+    val showPinnedSection: Boolean = true,
+    val itemSpacingDp: Int = 4
 )
 
 data class PluginManifest(
@@ -33,6 +40,6 @@ data class PluginManifest(
     val name: String,
     val version: String,
     val type: String,
-    val colors: PluginColors,
-    val uiTweaks: PluginUiTweaks = PluginUiTweaks()
+    val colors: PluginColors? = null,
+    val uiTweaks: PluginUiTweaks? = null
 )

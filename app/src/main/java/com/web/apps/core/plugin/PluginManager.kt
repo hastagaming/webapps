@@ -100,28 +100,41 @@ class PluginManager @Inject constructor() {
                         val colorsSection = sections["colors"] ?: emptyMap()
                         val uiTweaksSection = sections["uiTweaks"] ?: emptyMap()
 
-                        val colors = PluginColors(
-                            primary = colorsSection["primary"] ?: "#90CAF9",
-                            background = colorsSection["background"] ?: "#121212",
-                            surface = colorsSection["surface"] ?: "#1E1E1E",
-                            surfaceVariant = colorsSection["surfaceVariant"] ?: "#2D2D2D",
-                            onSurface = colorsSection["onSurface"] ?: "#FFFFFF",
-                            onPrimary = colorsSection["onPrimary"] ?: "#000000",
-                            error = colorsSection["error"] ?: "#CF6679"
-                        )
+                        val pluginType = root["type"] ?: "theme"
 
-                        val uiTweaks = PluginUiTweaks(
-                            cornerRadiusDp = uiTweaksSection["cornerRadiusDp"]?.toIntOrNull() ?: 12,
-                            gridMinTileWidthDp = uiTweaksSection["gridMinTileWidthDp"]?.toIntOrNull() ?: 100,
-                            fabPosition = uiTweaksSection["fabPosition"] ?: "end",
-                            showSearchBar = uiTweaksSection["showSearchBar"]?.toBooleanStrictOrNull() ?: true
-                        )
+                        val colors = if (colorsSection.isNotEmpty()) {
+                            PluginColors(
+                                primary = colorsSection["primary"] ?: "#90CAF9",
+                                background = colorsSection["background"] ?: "#121212",
+                                surface = colorsSection["surface"] ?: "#1E1E1E",
+                                surfaceVariant = colorsSection["surfaceVariant"] ?: "#2D2D2D",
+                                onSurface = colorsSection["onSurface"] ?: "#FFFFFF",
+                                onPrimary = colorsSection["onPrimary"] ?: "#000000",
+                                error = colorsSection["error"] ?: "#CF6679"
+                            )
+                        } else null
+
+                        val uiTweaks = if (uiTweaksSection.isNotEmpty()) {
+                            PluginUiTweaks(
+                                cornerRadiusDp = uiTweaksSection["cornerRadiusDp"]?.toIntOrNull() ?: 12,
+                                gridMinTileWidthDp = uiTweaksSection["gridMinTileWidthDp"]?.toIntOrNull() ?: 100,
+                                fabPosition = uiTweaksSection["fabPosition"] ?: "end",
+                                showSearchBar = uiTweaksSection["showSearchBar"]?.toBooleanStrictOrNull() ?: true,
+                                showBackupButton = uiTweaksSection["showBackupButton"]?.toBooleanStrictOrNull() ?: true,
+                                showSignOutButton = uiTweaksSection["showSignOutButton"]?.toBooleanStrictOrNull() ?: true,
+                                showSettingsButton = uiTweaksSection["showSettingsButton"]?.toBooleanStrictOrNull() ?: true,
+                                showRefreshAllButton = uiTweaksSection["showRefreshAllButton"]?.toBooleanStrictOrNull() ?: true,
+                                showStopAllButton = uiTweaksSection["showStopAllButton"]?.toBooleanStrictOrNull() ?: true,
+                                showPinnedSection = uiTweaksSection["showPinnedSection"]?.toBooleanStrictOrNull() ?: true,
+                                itemSpacingDp = uiTweaksSection["itemSpacingDp"]?.toIntOrNull() ?: 4
+                            )
+                        } else null
 
                         val manifest = PluginManifest(
                             id = root["id"] ?: "",
                             name = root["name"] ?: "",
                             version = root["version"] ?: "1.0.0",
-                            type = root["type"] ?: "theme",
+                            type = pluginType,
                             colors = colors,
                             uiTweaks = uiTweaks
                         )

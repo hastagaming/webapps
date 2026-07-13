@@ -68,20 +68,14 @@ fun PluginBrowserScreen(
                 }
                 else -> {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        if (uiState.activePlugin != null) {
-                            ListItem(
-                                headlineContent = { Text("Active: ${uiState.activePlugin?.name}") },
-                                supportingContent = { Text("Tap to disable and return to default theme") },
-                                modifier = Modifier.clickable { viewModel.disablePlugin() }
-                            )
-                        }
                         uiState.catalog.forEach { entry ->
                             PluginRow(
                                 entry = entry,
                                 isDownloaded = viewModel.isDownloaded(entry.id),
-                                isActive = uiState.activePlugin?.id == entry.id,
+                                isActive = viewModel.isActive(entry),
                                 onDownload = { viewModel.downloadPlugin(entry) },
-                                onUse = { viewModel.usePlugin(entry) }
+                                onUse = { viewModel.usePlugin(entry) },
+                                onUnuse = { viewModel.unusePlugin(entry) }
                             )
                         }
                     }
@@ -122,7 +116,8 @@ private fun PluginRow(
     isDownloaded: Boolean,
     isActive: Boolean,
     onDownload: () -> Unit,
-    onUse: () -> Unit
+    onUse: () -> Unit,
+    onUnuse: () -> Unit
 ) {
     ListItem(
         headlineContent = { Text(entry.name) },
@@ -142,12 +137,10 @@ private fun PluginRow(
             )
         },
         trailingContent = {
-            if (isActive) {
-                Text("Active", color = MaterialTheme.colorScheme.primary)
-            } else if (isDownloaded) {
-                Button(onClick = onUse) { Text("Use") }
-            } else {
-                OutlinedButton(onClick = onDownload) { Text("Download") }
+            when {
+                isActive -> OutlinedButton(onClick = onUnuse) { Text("Unuse") }
+                isDownloaded -> Button(onClick = onUse) { Text("Use") }
+                else -> OutlinedButton(onClick = onDownload) { Text("Download") }
             }
         }
     )

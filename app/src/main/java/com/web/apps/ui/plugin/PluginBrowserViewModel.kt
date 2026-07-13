@@ -13,13 +13,15 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class PluginBrowserUiState(
     val isLoading: Boolean = true,
     val catalog: List<PluginCatalogEntry> = emptyList(),
-    val activePlugin: PluginManifest? = null,
+    val activeThemeId: String? = null,
+    val activeUiId: String? = null,
     val isApplying: Boolean = false,
     val errorMessage: String? = null,
     val resultMessage: String? = null
@@ -38,9 +40,13 @@ class PluginBrowserViewModel @Inject constructor(
     init {
         loadCatalog()
         viewModelScope.launch {
-            pluginPreferenceManager.activePlugin.collect { plugin ->
-                _uiState.value = _uiState.value.copy(activePlugin = plugin)
-            }
+            combine(
+                pluginPreferenceManager.activeThemePlugin,
+                pluginPreferenceManager.activeUiPlugin
+            ) { theme, ui -> theme?.id to ui?.id }
+                .collect { (themeId, uiId) ->
+                    _uiState.value = _uiState.value.copy(activeThemeId = themeId, activeUiId = uiId)
+                }
         }
     }
 
@@ -59,6 +65,14 @@ class PluginBrowserViewModel @Inject constructor(
     }
 
     fun isDownloaded(pluginId: String): Boolean = pluginManager.isPluginDownloaded(appContext, pluginId)
+
+    fun isActive(entry: PluginCatalogEntry): Boolean {
+        return if (entry.type == "ui") {
+            _uiState.value.activeUiId == entry.id
+        } else {
+            _uiState.value.activeThemeId == entry.id
+        }
+    }
 
     fun downloadPlugin(entry: PluginCatalogEntry) {
         viewModelScope.launch {
@@ -103,9 +117,10 @@ class PluginBrowserViewModel @Inject constructor(
         }
     }
 
-    fun disablePlugin() {
+    fun unusePlugin(entry: PluginCatalogEntry) {
         viewModelScope.launch {
-            pluginPreferenceManager.setActivePlugin(null)
+            pluginPreferenceManager.clearActivePlugin(entry.type)
+            _uiState.value = _uiState.value.copy(resultMessage = "${entry.name} disabled.")
         }
     }
 
