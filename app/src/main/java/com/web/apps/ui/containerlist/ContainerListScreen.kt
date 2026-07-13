@@ -267,6 +267,7 @@ fun ContainerListScreen(
                             GroupSection(
                                 groupName = "Pinned",
                                 groupColor = MaterialTheme.colorScheme.primaryContainer,
+                                containers = uiState.pinnedContainers,
                                 gridMinTileWidthDp = uiTweaks.gridMinTileWidthDp,
                                 cornerRadiusDp = uiTweaks.cornerRadiusDp,
                                 onContainerClick = onContainerClick,

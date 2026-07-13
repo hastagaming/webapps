@@ -40,6 +40,11 @@ class ContainerListViewModel @Inject constructor(
         observeGroupsAndContainers()
     }
 
+    val activePluginUiTweaks: StateFlow<com.web.apps.core.plugin.PluginUiTweaks> =
+        pluginPreferenceManager.activePlugin
+            .map { it?.uiTweaks ?: com.web.apps.core.plugin.PluginUiTweaks() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.web.apps.core.plugin.PluginUiTweaks())
+
     private fun observeGroupsAndContainers() {
         combine(
             groupRepository.observeAllGroups(),

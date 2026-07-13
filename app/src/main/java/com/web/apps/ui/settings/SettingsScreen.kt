@@ -31,6 +31,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material3.Switch
 import androidx.compose.material.icons.filled.TimerOff
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
