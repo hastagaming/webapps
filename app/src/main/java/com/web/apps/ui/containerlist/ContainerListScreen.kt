@@ -267,8 +267,8 @@ fun ContainerListScreen(
                             GroupSection(
                                 groupName = "Pinned",
                                 groupColor = MaterialTheme.colorScheme.primaryContainer,
-                                containers = uiState.pinnedContainers,
-                                gridMinTileWidthDp: Int = 100,
+                                gridMinTileWidthDp = uiTweaks.gridMinTileWidthDp,
+                                cornerRadiusDp = uiTweaks.cornerRadiusDp,
                                 onContainerClick = onContainerClick,
                                 onRefresh = { viewModel.onEvent(ContainerListEvent.RefreshContainer(it)) },
                                 onStop = { viewModel.onEvent(ContainerListEvent.StopContainer(it)) },
@@ -299,7 +299,8 @@ fun ContainerListScreen(
                             GroupSection(
                                 groupName = "Without Group",
                                 groupColor = MaterialTheme.colorScheme.surfaceVariant,
-                                gridMinTileWidthDp: Int = 100,
+                                gridMinTileWidthDp = uiTweaks.gridMinTileWidthDp,
+                                cornerRadiusDp = uiTweaks.cornerRadiusDp,
                                 containers = uiState.ungroupedContainers,
                                 onContainerClick = onContainerClick,
                                 onRefresh = { viewModel.onEvent(ContainerListEvent.RefreshContainer(it)) },
@@ -334,7 +335,8 @@ fun ContainerListScreen(
                         GroupSection(
                             groupName = group.name,
                             groupColor = Color(android.graphics.Color.parseColor(group.colorHex)),
-                            gridMinTileWidthDp: Int = 100,
+                            gridMinTileWidthDp = uiTweaks.gridMinTileWidthDp,
+                            cornerRadiusDp = uiTweaks.cornerRadiusDp,
                             containers = uiState.containersByGroup[group.groupId].orEmpty(),
                             onContainerClick = onContainerClick,
                             onRefresh = { viewModel.onEvent(ContainerListEvent.RefreshContainer(it)) },
@@ -478,6 +480,7 @@ private fun GroupSection(
                                 if (container != null) {
                                     ContainerTile(
                                         container = container,
+                                        cornerRadiusDp = cornerRadiusDp,
                                         onClick = { onContainerClick(container.containerId) },
                                         onRefresh = { onRefresh(container.containerId) },
                                         onStop = { onStop(container.containerId) },

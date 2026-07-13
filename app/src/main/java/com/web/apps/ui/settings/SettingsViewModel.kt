@@ -11,6 +11,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    private val sessionEvictionPreferenceManager: com.web.apps.core.preferences.SessionEvictionPreferenceManager,
+    private val sessionEvictionScheduler: com.web.apps.core.container.SessionEvictionScheduler,
     private val themePreferenceManager: ThemePreferenceManager,
     private val backupPreferenceManager: com.web.apps.core.preferences.BackupPreferenceManager,
     private val backupScheduler: com.web.apps.backup.BackupScheduler,
@@ -22,6 +24,25 @@ class SettingsViewModel @Inject constructor(
     val fontScalePercent: Flow<Int> = themePreferenceManager.fontScalePercent
     val isAutoBackupEnabled: Flow<Boolean> = backupPreferenceManager.isAutoBackupEnabled
     val autoBackupIntervalDays: Flow<Int> = backupPreferenceManager.intervalDays
+    val isEvictionEnabled: Flow<Boolean> = sessionEvictionPreferenceManager.isEnabled
+    val evictionIdleMinutes: Flow<Int> = sessionEvictionPreferenceManager.idleMinutes
+
+    fun setEvictionEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            sessionEvictionPreferenceManager.setEnabled(enabled)
+            if (enabled) {
+                sessionEvictionScheduler.schedule(appContext)
+            } else {
+                sessionEvictionScheduler.cancel(appContext)
+            }
+        }
+    }
+
+    fun setEvictionIdleMinutes(minutes: Int) {
+        viewModelScope.launch {
+            sessionEvictionPreferenceManager.setIdleMinutes(minutes)
+        }
+    }
 
     fun setAutoBackupEnabled(enabled: Boolean) {
         viewModelScope.launch {

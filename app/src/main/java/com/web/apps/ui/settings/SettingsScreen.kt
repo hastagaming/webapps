@@ -31,6 +31,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.TimerOff
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -55,6 +56,9 @@ fun SettingsScreen(
 ) {
     val fontScalePercent by viewModel.fontScalePercent.collectAsState(initial = 100)
     var showFontSizeDialog by remember { mutableStateOf(false) }
+    val isEvictionEnabled by viewModel.isEvictionEnabled.collectAsState(initial = false)
+    val evictionIdleMinutes by viewModel.evictionIdleMinutes.collectAsState(initial = 30)
+    var showEvictionDialog by remember { mutableStateOf(false) }
     val accentColor by viewModel.accentColor.collectAsState(initial = null)
     var showAccentDialog by remember { mutableStateOf(false) }
     val isAutoBackupEnabled by viewModel.isAutoBackupEnabled.collectAsState(initial = false)
@@ -127,6 +131,21 @@ fun SettingsScreen(
             )
 
             ListItem(
+                headlineContent = { Text("Auto-Stop Idle Containers") },
+                supportingContent = {
+                    Text(if (isEvictionEnabled) "Stop containers idle for $evictionIdleMinutes+ min" else "Off")
+                },
+                leadingContent = { Icon(Icons.Filled.TimerOff, contentDescription = null) },
+                trailingContent = {
+                    Switch(
+                        checked = isEvictionEnabled,
+                        onCheckedChange = { viewModel.setEvictionEnabled(it) }
+                    )
+                },
+                modifier = Modifier.clickable(enabled = isEvictionEnabled) { showEvictionDialog = true }
+            )
+
+            ListItem(
                 headlineContent = { Text("Auto Backup") },
                 supportingContent = { Text(if (isAutoBackupEnabled) "Every $autoBackupIntervalDays days to Downloads" else "Off") },
                 leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.CloudDone, contentDescription = null) },
@@ -171,6 +190,39 @@ fun SettingsScreen(
                 TextButton(onClick = { showFontSizeDialog = false }) {
                     Text("Close")
                 }
+            }
+        )
+    }
+
+    if (showEvictionDialog) {
+        val options = listOf(15, 30, 60, 120)
+        AlertDialog(
+            onDismissRequest = { showEvictionDialog = false },
+            title = { Text("Idle Timeout") },
+            text = {
+                Column {
+                    options.forEach { minutes ->
+                        ListItem(
+                            headlineContent = { Text("$minutes minutes") },
+                            leadingContent = {
+                                RadioButton(
+                                    selected = evictionIdleMinutes == minutes,
+                                    onClick = {
+                                        viewModel.setEvictionIdleMinutes(minutes)
+                                        showEvictionDialog = false
+                                    }
+                                )
+                            },
+                            modifier = Modifier.clickable {
+                                viewModel.setEvictionIdleMinutes(minutes)
+                                showEvictionDialog = false
+                            }
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showEvictionDialog = false }) { Text("Close") }
             }
         )
     }
