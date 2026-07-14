@@ -28,9 +28,13 @@ class ContainerListViewModel @Inject constructor(
     private val serviceController: ContainerServiceController,
     private val containerManager: com.web.apps.core.container.ContainerManager,
     private val authRepository: AuthRepository,
-    pluginPreferenceManager: PluginPreferenceManager
+    pluginPreferenceManager: PluginPreferenceManager,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context
 ) : ViewModel() {
 
+    private var lastDeletedContainer: ContainerEntity? = null
+    private var lastDeletedGroup: GroupEntity? = null
+    val undoEvent = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 1)
     private val _uiState = MutableStateFlow(ContainerListUiState())
     val currentUser: StateFlow<FirebaseUser?> = authRepository.observeAuthState()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), authRepository.currentUser)
@@ -38,6 +42,13 @@ class ContainerListViewModel @Inject constructor(
 
     init {
         observeGroupsAndContainers()
+        viewModelScope.launch {
+            containerRepository.observeAllContainers().collect {
+                com.web.apps.widget.WebAppsWidget().let { widget ->
+                }
+                updateWidget()
+            }
+        }
     }
 
     val activePluginUiTweaks: StateFlow<com.web.apps.core.plugin.PluginUiTweaks> =
@@ -119,6 +130,15 @@ class ContainerListViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    private fun updateWidget() {
+        viewModelScope.launch {
+            try {
+                androidx.glance.appwidget.updateAll<com.web.apps.widget.WebAppsWidget>(appContext)
+            } catch (e: Exception) {
+            }
+        }
+    }
+
     private fun createContainer(name: String, url: String, groupId: Long?) {
         viewModelScope.launch {
             try {
@@ -146,14 +166,31 @@ class ContainerListViewModel @Inject constructor(
 
     private fun deleteContainer(event: ContainerListEvent.DeleteContainer) {
         viewModelScope.launch {
+            lastDeletedContainer = event.container
             serviceController.stopContainer(event.container.containerId)
             containerRepository.deleteContainer(event.container)
+            undoEvent.tryEmit("container:${event.container.name}")
         }
     }
 
     private fun deleteGroup(event: ContainerListEvent.DeleteGroup) {
         viewModelScope.launch {
+            lastDeletedGroup = event.group
             groupRepository.deleteGroup(event.group)
+            undoEvent.tryEmit("group:${event.group.name}")
+        }
+    }
+
+    fun undoLastDelete() {
+        viewModelScope.launch {
+            lastDeletedContainer?.let {
+                containerRepository.createContainer(name = it.name, url = it.url, groupId = it.groupId)
+                lastDeletedContainer = null
+            }
+            lastDeletedGroup?.let {
+                groupRepository.createGroup(name = it.name, colorHex = it.colorHex, iconUri = it.iconUri)
+                lastDeletedGroup = null
+            }
         }
     }
 

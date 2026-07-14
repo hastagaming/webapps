@@ -109,6 +109,15 @@ fun BrowserScreen(
                                 contentDescription = "Force Recovery"
                             )
                         }
+                        IconButton(onClick = {
+                            viewModel.onEvent(BrowserEvent.ExitContainer)
+                            onNavigateBack()
+                        }) {
+                            Icon(
+                                androidx.compose.material.icons.Icons.AutoMirrored.Filled.ExitToApp,
+                                contentDescription = "Exit Container"
+                            )
+                        }
                     }
                 )
             }

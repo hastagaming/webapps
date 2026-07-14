@@ -32,6 +32,7 @@ object WebAppsDestinations {
     const val CONTAINER_LIST = "container_list"
     const val BROWSER = "browser/{containerId}"
     const val BACKUP = "backup"
+    const val LOG_VIEWER = "log_viewer"
     const val QR_EXPORT = "qr_export"
     const val QR_SCAN = "qr_scan"
     const val STATISTICS = "statistics"
@@ -127,6 +128,11 @@ fun WebAppsNavHost(
             )
         }
 
+        composable(WebAppsDestinations.LOG_VIEWER) {
+            onUpdateScreenActiveChanged(false)
+            com.web.apps.ui.logviewer.LogViewerScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
         composable(
             route = WebAppsDestinations.BROWSER,
             arguments = listOf(navArgument("containerId") { type = NavType.LongType })
@@ -208,6 +214,7 @@ fun WebAppsNavHost(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToUpdate = { navController.navigate(WebAppsDestinations.UPDATE_SYSTEM) },
                 onNavigateToPlugins = { navController.navigate(WebAppsDestinations.PLUGIN_BROWSER) },
+                onNavigateToLogViewer = { navController.navigate(WebAppsDestinations.LOG_VIEWER) },
                 onNavigateToStatistics = { navController.navigate(WebAppsDestinations.STATISTICS) }
             )
         }

@@ -11,6 +11,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    private val authRepository: com.web.apps.data.repository.AuthRepository,
     private val sessionEvictionPreferenceManager: com.web.apps.core.preferences.SessionEvictionPreferenceManager,
     private val sessionEvictionScheduler: com.web.apps.core.container.SessionEvictionScheduler,
     private val themePreferenceManager: ThemePreferenceManager,
@@ -26,6 +27,8 @@ class SettingsViewModel @Inject constructor(
     val autoBackupIntervalDays: Flow<Int> = backupPreferenceManager.intervalDays
     val isEvictionEnabled: Flow<Boolean> = sessionEvictionPreferenceManager.isEnabled
     val evictionIdleMinutes: Flow<Int> = sessionEvictionPreferenceManager.idleMinutes
+    val isDeveloper: kotlinx.coroutines.flow.Flow<Boolean> = authRepository.observeAuthState()
+        .map { user -> user?.email.equals("nasaawakening@gmail.com", ignoreCase = true) }
 
     fun setEvictionEnabled(enabled: Boolean) {
         viewModelScope.launch {

@@ -88,12 +88,28 @@ fun ContainerListScreen(
     onSignOut: () -> Unit = {},
     viewModel: ContainerListViewModel = hiltViewModel()
 ) {
+    private const val DEVELOPER_EMAIL = "nasaawakening@gmail.com"
+
     val uiTweaks by viewModel.activePluginUiTweaks.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val context = LocalContext.current
     LaunchedEffect(Unit) {
+        viewModel.undoEvent.collect { info ->
+            val name = info.substringAfter(":")
+            val result = snackbarHostState.showSnackbar(
+                message = "\"$name\" deleted",
+                actionLabel = "Undo",
+                duration = androidx.compose.material3.SnackbarDuration.Short
+            )
+            if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                viewModel.undoLastDelete()
+            }
+        }
         com.web.apps.core.notification.BadgeCountManager().clearBadge(context)
     }
+    val isDeveloper = currentUser?.email.equals(DEVELOPER_EMAIL, ignoreCase = true)
+    var containerToDelete by remember { mutableStateOf<ContainerEntity?>(null) }
+    var groupToDelete by remember { mutableStateOf<GroupEntity?>(null) }
     var accountMenuExpanded by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -295,7 +311,7 @@ fun ContainerListScreen(
                                 onToggleKeepAlive = { containerId, enabled ->
                                     viewModel.onEvent(ContainerListEvent.ToggleKeepAlive(containerId, enabled))
                                 },
-                                onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
+                                onDelete = { containerToDelete = it },
                                 onAddContainer = { },
                                 onOpenLockSettings = { containerId -> onNavigateToLockSettings(containerId) },
                                 onTogglePin = { containerId, pinned ->
@@ -328,7 +344,7 @@ fun ContainerListScreen(
                                 onToggleKeepAlive = { containerId, enabled ->
                                     viewModel.onEvent(ContainerListEvent.ToggleKeepAlive(containerId, enabled))
                                 },
-                                onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
+                                onDelete = { containerToDelete = it },
                                 onAddContainer = {
                                     viewModel.onEvent(ContainerListEvent.OpenAddContainerDialog(groupId = null))
                                 },
@@ -361,14 +377,14 @@ fun ContainerListScreen(
                             onToggleKeepAlive = { containerId, enabled ->
                                 viewModel.onEvent(ContainerListEvent.ToggleKeepAlive(containerId, enabled))
                             },
-                            onDelete = { viewModel.onEvent(ContainerListEvent.DeleteContainer(it)) },
+                            onDelete = { containerToDelete = it },
                             onAddContainer = {
                                 viewModel.onEvent(ContainerListEvent.OpenAddContainerDialog(groupId = group.groupId))
                             },
                             onOpenLockSettings = { containerId ->
                                 onNavigateToLockSettings(containerId)
                             },
-                            onDeleteGroup = { viewModel.onEvent(ContainerListEvent.DeleteGroup(group)) },
+                            onDeleteGroup = { groupToDelete = group },
                             onChangeIcon = { containerId, path ->
                                     viewModel.onEvent(ContainerListEvent.ChangeContainerIcon(containerId, path))
                             },
@@ -434,6 +450,45 @@ fun ContainerListScreen(
                 TextButton(onClick = { containerForGroupMove = null }) {
                     Text("Cancel")
                 }
+            }
+        )
+    }
+    val pendingContainerDelete = containerToDelete
+    if (pendingContainerDelete != null) {
+        AlertDialog(
+            onDismissRequest = { containerToDelete = null },
+            title = { Text("Delete Container?") },
+            text = { Text("Are you sure you want to delete \"${pendingContainerDelete.name}\"? This cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.onEvent(ContainerListEvent.DeleteContainer(pendingContainerDelete))
+                    containerToDelete = null
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { containerToDelete = null }) { Text("Cancel") }
+            }
+        )
+    }
+
+    val pendingGroupDelete = groupToDelete
+    if (pendingGroupDelete != null) {
+        AlertDialog(
+            onDismissRequest = { groupToDelete = null },
+            title = { Text("Delete Group?") },
+            text = { Text("Are you sure you want to delete \"${pendingGroupDelete.name}\"? Containers inside will move to \"Without Group\".") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.onEvent(ContainerListEvent.DeleteGroup(pendingGroupDelete))
+                    groupToDelete = null
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { groupToDelete = null }) { Text("Cancel") }
             }
         )
     }

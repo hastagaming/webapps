@@ -53,8 +53,11 @@ fun SettingsScreen(
     onNavigateToUpdate: () -> Unit,
     onNavigateToStatistics: () -> Unit,
     onNavigateToPlugins: () -> Unit,
+    isDeveloper: Boolean = false,
+    onNavigateToLogViewer: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    val isDeveloper by viewModel.isDeveloper.collectAsState(initial = false)
     val fontScalePercent by viewModel.fontScalePercent.collectAsState(initial = 100)
     var showFontSizeDialog by remember { mutableStateOf(false) }
     val isEvictionEnabled by viewModel.isEvictionEnabled.collectAsState(initial = false)
@@ -157,6 +160,21 @@ fun SettingsScreen(
                     )
                 }
             )
+            if (isDeveloper) {
+                androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Text(
+                    "Developer Tools",
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+                ListItem(
+                    headlineContent = { Text("Log Viewer") },
+                    supportingContent = { Text("View crash and debug logs in-app") },
+                    leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.BugReport, contentDescription = null) },
+                    modifier = Modifier.clickable(onClick = onNavigateToLogViewer)
+                )
+            }
         }
     }
 

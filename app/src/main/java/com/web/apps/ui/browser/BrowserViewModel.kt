@@ -58,6 +58,14 @@ class BrowserViewModel @Inject constructor(
             is BrowserEvent.DismissDangerousWarning -> dismissDangerousWarning()
             is BrowserEvent.AllowHttpOnce -> allowHttpOnce()
             is BrowserEvent.DismissHttpWarning -> dismissHttpWarning()
+            is BrowserEvent.ExitContainer -> onExitCleared()
+        }
+    }
+
+    private fun onExitCleared() {
+        val container = _uiState.value.container
+        if (container?.isKeepAliveEnabled != true) {
+            containerManager.stopContainer(containerId)
         }
     }
 

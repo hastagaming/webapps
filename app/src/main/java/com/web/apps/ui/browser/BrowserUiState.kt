@@ -29,4 +29,5 @@ sealed class BrowserEvent {
     object DismissDangerousWarning : BrowserEvent()
     object AllowHttpOnce : BrowserEvent()
     object DismissHttpWarning : BrowserEvent()
+    object ExitContainer : BrowserEvent()
 }
