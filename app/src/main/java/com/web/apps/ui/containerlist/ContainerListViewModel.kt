@@ -149,7 +149,7 @@ class ContainerListViewModel @Inject constructor(
     private fun updateWidget() {
         viewModelScope.launch {
             try {
-                updateAll<com.web.apps.widget.WebAppsWidget>(appContext)
+                com.web.apps.widget.WebAppsWidget().updateAll(appContext)
             } catch (e: Exception) {
             }
         }

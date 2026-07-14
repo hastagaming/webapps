@@ -39,6 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.web.apps.core.container.ContainerManager
+import androidx.compose.ui.res.painterResource
+import com.web.apps.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,7 +116,7 @@ fun BrowserScreen(
                             onNavigateBack()
                         }) {
                             Icon(
-                                androidx.compose.material.icons.Icons.Filled.ExitToApp,
+                                painter = painterResource(R.drawable.ic_exit_container),
                                 contentDescription = "Exit Container"
                             )
                         }

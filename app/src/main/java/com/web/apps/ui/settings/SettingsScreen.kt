@@ -8,6 +8,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
