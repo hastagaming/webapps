@@ -114,7 +114,7 @@ fun BrowserScreen(
                             onNavigateBack()
                         }) {
                             Icon(
-                                androidx.compose.material.icons.Icons.AutoMirrored.Filled.ExitToApp,
+                                androidx.compose.material.icons.Icons.Filled.ExitToApp,
                                 contentDescription = "Exit Container"
                             )
                         }

@@ -2,9 +2,12 @@ package com.web.apps.ui.containerlist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.glance.appwidget.updateAll
 import com.web.apps.data.repository.ContainerRepository
 import com.web.apps.data.repository.GroupRepository
 import com.web.apps.service.ContainerServiceController
+import com.web.apps.data.local.entity.ContainerEntity
+import com.web.apps.data.local.entity.GroupEntity
 import com.web.apps.core.preferences.PluginPreferenceManager
 import com.web.apps.data.repository.AuthRepository
 import com.google.firebase.auth.FirebaseUser
@@ -81,6 +84,19 @@ class ContainerListViewModel @Inject constructor(
 
     fun getActiveSessionCount(): Int = containerManager.getActiveSessionCount()
 
+    fun undoLastDelete() {
+        viewModelScope.launch {
+            lastDeletedContainer?.let {
+                containerRepository.createContainer(name = it.name, url = it.url, groupId = it.groupId)
+                lastDeletedContainer = null
+            }
+            lastDeletedGroup?.let {
+                groupRepository.createGroup(name = it.name, colorHex = it.colorHex, iconUri = it.iconUri)
+                lastDeletedGroup = null
+            }
+        }
+    }
+
     fun onEvent(event: ContainerListEvent) {
         when (event) {
             is ContainerListEvent.SearchQueryChanged -> onSearchQueryChanged(event.query)
@@ -133,7 +149,7 @@ class ContainerListViewModel @Inject constructor(
     private fun updateWidget() {
         viewModelScope.launch {
             try {
-                androidx.glance.appwidget.updateAll<com.web.apps.widget.WebAppsWidget>(appContext)
+                updateAll<com.web.apps.widget.WebAppsWidget>(appContext)
             } catch (e: Exception) {
             }
         }
@@ -178,19 +194,6 @@ class ContainerListViewModel @Inject constructor(
             lastDeletedGroup = event.group
             groupRepository.deleteGroup(event.group)
             undoEvent.tryEmit("group:${event.group.name}")
-        }
-    }
-
-    fun undoLastDelete() {
-        viewModelScope.launch {
-            lastDeletedContainer?.let {
-                containerRepository.createContainer(name = it.name, url = it.url, groupId = it.groupId)
-                lastDeletedContainer = null
-            }
-            lastDeletedGroup?.let {
-                groupRepository.createGroup(name = it.name, colorHex = it.colorHex, iconUri = it.iconUri)
-                lastDeletedGroup = null
-            }
         }
     }
 

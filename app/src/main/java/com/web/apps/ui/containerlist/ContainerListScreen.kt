@@ -78,6 +78,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.web.apps.data.local.entity.ContainerEntity
 import com.web.apps.data.local.entity.GroupEntity
 
+private const val DEVELOPER_EMAIL = "nasaawakening@gmail.com"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContainerListScreen(
@@ -88,11 +90,16 @@ fun ContainerListScreen(
     onSignOut: () -> Unit = {},
     viewModel: ContainerListViewModel = hiltViewModel()
 ) {
-    private const val DEVELOPER_EMAIL = "nasaawakening@gmail.com"
-
     val uiTweaks by viewModel.activePluginUiTweaks.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val context = LocalContext.current
+    val isDeveloper = currentUser?.email.equals(DEVELOPER_EMAIL, ignoreCase = true)
+    var containerToDelete by remember { mutableStateOf<ContainerEntity?>(null) }
+    var groupToDelete by remember { mutableStateOf<GroupEntity?>(null) }
+    var accountMenuExpanded by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         viewModel.undoEvent.collect { info ->
             val name = info.substringAfter(":")
@@ -107,13 +114,6 @@ fun ContainerListScreen(
         }
         com.web.apps.core.notification.BadgeCountManager().clearBadge(context)
     }
-    val isDeveloper = currentUser?.email.equals(DEVELOPER_EMAIL, ignoreCase = true)
-    var containerToDelete by remember { mutableStateOf<ContainerEntity?>(null) }
-    var groupToDelete by remember { mutableStateOf<GroupEntity?>(null) }
-    var accountMenuExpanded by remember { mutableStateOf(false) }
-    val uiState by viewModel.uiState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
     var fabMenuExpanded by remember { mutableStateOf(false) }
     var containerForGroupMove by remember { mutableStateOf<ContainerEntity?>(null) }
 
