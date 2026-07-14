@@ -60,7 +60,6 @@ import com.web.apps.core.auth.KnownAccountType
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    onGoogleSignInRequested: (String) -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -68,8 +67,6 @@ fun LoginScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     var passwordVisible by remember { mutableStateOf(false) }
-
-    val webClientId = context.getString(R.string.default_web_client_id)
 
     LaunchedEffect(uiState.isAuthenticated) {
         if (uiState.isAuthenticated) {
@@ -88,14 +85,6 @@ fun LoginScreen(
         uiState.infoMessage?.let { message ->
             snackbarHostState.showSnackbar(message)
             viewModel.onEvent(LoginEvent.DismissMessage)
-        }
-    }
-
-    LaunchedEffect(uiState.pendingAccountEmail) {
-        val email = uiState.pendingAccountEmail
-        if (email != null && !uiState.showAccountForm) {
-            // Google account tapped from list -> trigger the real Google popup
-            onGoogleSignInRequested(webClientId)
         }
     }
 
@@ -122,8 +111,11 @@ fun LoginScreen(
                 onPasswordVisibilityToggle = { passwordVisible = !passwordVisible },
                 onEvent = { viewModel.onEvent(it) },
                 onGoogleSignInClick = {
-                    viewModel.beginGoogleInteractiveSignIn()
-                    onGoogleSignInRequested(webClientId)
+                    if (uiState.isRegisterMode) {
+                        viewModel.signInWithGoogleUnfiltered()
+                    } else {
+                        viewModel.signInWithGoogleFiltered()
+                    }
                 },
                 modifier = Modifier.padding(paddingValues)
             )

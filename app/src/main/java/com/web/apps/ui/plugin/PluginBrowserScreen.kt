@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -32,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.LaunchedEffect
 import com.web.apps.core.plugin.PluginCatalogEntry
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,8 +46,11 @@ fun PluginBrowserScreen(
     viewModel: PluginBrowserViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Plugins") },
@@ -98,15 +106,13 @@ fun PluginBrowserScreen(
         }
     }
 
-    if (uiState.resultMessage != null) {
-        AlertDialog(
-            onDismissRequest = { viewModel.dismissResult() },
-            title = { Text("Plugin") },
-            text = { Text(uiState.resultMessage ?: "") },
-            confirmButton = {
-                TextButton(onClick = { viewModel.dismissResult() }) { Text("OK") }
+    LaunchedEffect(uiState.resultMessage) {
+        uiState.resultMessage?.let { message ->
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(message)
             }
-        )
+            viewModel.dismissResult()
+        }
     }
 }
 

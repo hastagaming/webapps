@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.web.apps.R
 import com.web.apps.core.auth.GoogleSignInHelper
 import com.web.apps.core.auth.GoogleSignInResult
-import com.web.apps.core.auth.GoogleSignInResultBus
 import com.web.apps.core.auth.KnownAccount
 import com.web.apps.core.auth.KnownAccountManager
 import com.web.apps.core.auth.KnownAccountType
@@ -19,8 +18,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,28 +27,21 @@ private const val MIN_PASSWORD_LENGTH = 6
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val googleSignInHelper: GoogleSignInHelper,
-    private val googleSignInResultBus: GoogleSignInResultBus,
     private val supabaseSyncManager: SupabaseSyncManager,
     private val knownAccountManager: KnownAccountManager,
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
-
-    init {
-        googleSignInResultBus.results
-            .onEach { intent -> handleGoogleSignInResult(intent) }
-            .launchIn(viewModelScope)
-
-        viewModelScope.launch {
-            knownAccountManager.pullKnownAccountsFromSupabase()
-        }
-    }
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     val knownAccounts = knownAccountManager.knownAccounts
 
-    private var pendingGoogleAccountEmail: String? = null
+    init {
+        viewModelScope.launch {
+            knownAccountManager.pullKnownAccountsFromSupabase()
+        }
+    }
 
     fun onEvent(event: LoginEvent) {
         when (event) {
@@ -108,25 +98,77 @@ class LoginViewModel @Inject constructor(
                 )
             }
             KnownAccountType.GOOGLE -> {
-                pendingGoogleAccountEmail = account.email
-                val webClientId = appContext.getString(R.string.default_web_client_id)
-                googleSignInHelper.initializeGoogleSignIn(appContext, webClientId)
-                _uiState.value = _uiState.value.copy(
-                    isLoading = true,
-                    errorMessage = null,
-                    pendingAccountEmail = account.email
-                )
+                signInWithGoogle(expectedEmail = account.email, isRegisterModeOverride = false)
             }
         }
     }
 
-    fun requestGoogleInteractiveForAccount(email: String?) {
-        pendingGoogleAccountEmail = email
+    fun signInWithGoogleFiltered() {
+        signInWithGoogle(expectedEmail = null, isRegisterModeOverride = false)
     }
 
-    fun beginGoogleInteractiveSignIn() {
-        pendingGoogleAccountEmail = null
+    fun signInWithGoogleUnfiltered() {
+        signInWithGoogle(expectedEmail = null, isRegisterModeOverride = true)
+    }
+
+    private fun signInWithGoogle(expectedEmail: String?, isRegisterModeOverride: Boolean) {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+
+        viewModelScope.launch {
+            val webClientId = appContext.getString(R.string.default_web_client_id)
+            val filtered = expectedEmail != null || !isRegisterModeOverride
+
+            when (val result = googleSignInHelper.signIn(appContext, webClientId, filtered)) {
+                is GoogleSignInResult.Success -> {
+                    val authResult = authRepository.signInWithGoogleIdToken(result.idToken)
+
+                    if (authResult is AuthResult.Success) {
+                        val signedInEmail = authResult.user.email
+
+                        if (expectedEmail != null && !signedInEmail.equals(expectedEmail, ignoreCase = true)) {
+                            authRepository.signOut()
+                            _uiState.value = _uiState.value.copy(
+                                isLoading = false,
+                                errorMessage = "Please select $expectedEmail to continue."
+                            )
+                            return@launch
+                        }
+
+                        if (!isRegisterModeOverride && authResult.isNewUser) {
+                            authRepository.signOut()
+                            _uiState.value = _uiState.value.copy(
+                                isLoading = false,
+                                errorMessage = "No account signed in on this device."
+                            )
+                            return@launch
+                        }
+
+                        knownAccountManager.saveAccount(
+                            KnownAccount(
+                                email = signedInEmail ?: "",
+                                displayName = authResult.user.displayName,
+                                photoUrl = authResult.user.photoUrl?.toString(),
+                                type = KnownAccountType.GOOGLE
+                            )
+                        )
+                    }
+
+                    handleAuthResult(authResult)
+                }
+                is GoogleSignInResult.Failure -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.message
+                    )
+                }
+                is GoogleSignInResult.Cancelled -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "No account signed in on this device."
+                    )
+                }
+            }
+        }
     }
 
     private fun submitEmailAuth() {
@@ -156,73 +198,6 @@ class LoginViewModel @Inject constructor(
                 )
             }
             handleAuthResult(result)
-        }
-    }
-
-    fun handleGoogleSignInResult(data: android.content.Intent?) {
-        if (data == null) {
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                errorMessage = "No account signed in on this device."
-            )
-            return
-        }
-        viewModelScope.launch {
-            when (val result = googleSignInHelper.handleSignInResult(data)) {
-                is GoogleSignInResult.Success -> {
-                    val authResult = authRepository.signInWithGoogleIdToken(result.idToken)
-
-                    if (authResult is AuthResult.Success) {
-                        val signedInEmail = authResult.user.email
-                        val expectedEmail = pendingGoogleAccountEmail
-                        val isRegisterModeNow = _uiState.value.isRegisterMode
-
-                        if (expectedEmail != null && !signedInEmail.equals(expectedEmail, ignoreCase = true)) {
-                            authRepository.signOut()
-                            pendingGoogleAccountEmail = null
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                errorMessage = "Please select $expectedEmail to continue."
-                            )
-                            return@launch
-                        }
-
-                        if (!isRegisterModeNow && authResult.isNewUser) {
-                            authRepository.signOut()
-                            pendingGoogleAccountEmail = null
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                errorMessage = "No account signed in on this device."
-                            )
-                            return@launch
-                        }
-
-                        knownAccountManager.saveAccount(
-                            KnownAccount(
-                                email = signedInEmail ?: "",
-                                displayName = authResult.user.displayName,
-                                photoUrl = authResult.user.photoUrl?.toString(),
-                                type = KnownAccountType.GOOGLE
-                            )
-                        )
-                        pendingGoogleAccountEmail = null
-                    }
-
-                    handleAuthResult(authResult)
-                }
-                is GoogleSignInResult.Failure -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = result.message
-                    )
-                }
-                is GoogleSignInResult.Cancelled -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = "No account signed in on this device."
-                    )
-                }
-            }
         }
     }
 

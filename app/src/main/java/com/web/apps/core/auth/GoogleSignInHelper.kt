@@ -1,12 +1,15 @@
 package com.web.apps.core.auth
 
 import android.content.Context
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
-import com.web.apps.R
-import kotlinx.coroutines.tasks.await
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,60 +22,40 @@ sealed class GoogleSignInResult {
 @Singleton
 class GoogleSignInHelper @Inject constructor() {
 
-    private var googleSignInClient: GoogleSignInClient? = null
+    suspend fun signIn(context: Context, webClientId: String, filtered: Boolean): GoogleSignInResult {
+        return try {
+            val credentialManager = CredentialManager.create(context)
 
-    fun initializeGoogleSignIn(context: Context, webClientId: String) {
-        if (googleSignInClient == null) {
-            val gsoBuilder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(webClientId)
-                .requestEmail()
+            val signInOption = GetSignInWithGoogleOption.Builder(webClientId)
                 .build()
 
-            googleSignInClient = GoogleSignIn.getClient(context, gsoBuilder)
-        }
-    }
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(signInOption)
+                .build()
 
-    fun signOut(context: Context) {
-        googleSignInClient?.signOut()
-    }
+            val response = credentialManager.getCredential(context, request)
+            val credential = response.credential
 
-    fun getSignInIntent(context: Context): android.content.Intent? {
-        return googleSignInClient?.signInIntent
-    }
-
-    suspend fun silentSignIn(context: Context, webClientId: String): GoogleSignInResult {
-        return try {
-            initializeGoogleSignIn(context, webClientId)
-            val client = googleSignInClient
-                ?: return GoogleSignInResult.Failure("No account signed in on this device.")
-
-            val account = client.silentSignIn().await()
-            val idToken = account.idToken
-            if (idToken != null) {
-                GoogleSignInResult.Success(idToken)
+            if (credential is CustomCredential &&
+                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+            ) {
+                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                GoogleSignInResult.Success(googleIdTokenCredential.idToken)
             } else {
-                GoogleSignInResult.Failure("No account signed in on this device.")
+                GoogleSignInResult.Failure("Unexpected credential type.")
             }
-        } catch (e: Exception) {
+        } catch (e: NoCredentialException) {
             GoogleSignInResult.Failure("No account signed in on this device.")
-        }
-    }
-
-    fun handleSignInResult(data: android.content.Intent?): GoogleSignInResult {
-        return try {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            val account = task.getResult(ApiException::class.java)
-            val idToken = account?.idToken
-            if (idToken != null) {
-                GoogleSignInResult.Success(idToken)
+        } catch (e: GetCredentialException) {
+            if (e.type == "androidx.credentials.TYPE_USER_CANCELED") {
+                GoogleSignInResult.Cancelled
             } else {
-                GoogleSignInResult.Failure("ID token is null. Please try again.")
+                GoogleSignInResult.Failure(e.message ?: "Google Sign-In failed.")
             }
-        } catch (e: ApiException) {
-            when (e.statusCode) {
-                12501 -> GoogleSignInResult.Cancelled
-                else -> GoogleSignInResult.Failure(e.message ?: "Google Sign-In failed.")
-            }
+        } catch (e: GoogleIdTokenParsingException) {
+            GoogleSignInResult.Failure("Failed to parse Google ID token.")
+        } catch (e: Exception) {
+            GoogleSignInResult.Failure(e.message ?: "Google Sign-In failed.")
         }
     }
 }

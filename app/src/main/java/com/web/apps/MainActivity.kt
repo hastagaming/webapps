@@ -12,7 +12,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
 import android.annotation.SuppressLint
 import com.web.apps.core.auth.GoogleSignInHelper
-import com.web.apps.core.auth.GoogleSignInResultBus
 import com.web.apps.ui.navigation.WebAppsNavHost
 import com.web.apps.ui.theme.WebAppsTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,15 +33,6 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var pluginPreferenceManager: com.web.apps.core.preferences.PluginPreferenceManager
-
-    @Inject
-    lateinit var googleSignInResultBus: GoogleSignInResultBus
-
-    private val googleSignInLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        googleSignInResultBus.emit(if (result.resultCode == RESULT_OK) result.data else null)
-    }
 
     private val notificationPermissionLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
@@ -77,13 +67,7 @@ class MainActivity : ComponentActivity() {
                 androidx.compose.foundation.layout.Box {
                     WebAppsNavHost(
                         initialContainerId = initialContainerId,
-                        onUpdateScreenActiveChanged = { isActive -> isUpdateScreenActive = isActive },
-                        onGoogleSignInRequested = {
-                            val intent = googleSignInHelper.getSignInIntent(this@MainActivity)
-                            if (intent != null) {
-                                googleSignInLauncher.launch(intent)
-                            }
-                        }
+                        onUpdateScreenActiveChanged = { isActive -> isUpdateScreenActive = isActive }
                     )
 
                     val appSwitcherViewModel: com.web.apps.ui.appswitcher.AppSwitcherViewModel = androidx.hilt.navigation.compose.hiltViewModel()
