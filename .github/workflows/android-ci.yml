@@ -88,6 +88,10 @@ jobs:
           PATCH=$(echo "$TAG_NAME" | cut -d. -f3)
           VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
 
+          if [ "$VERSION_CODE" -lt 1 ]; then
+            VERSION_CODE=1
+          fi
+
           echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
           echo "Building version: $TAG_NAME (code: $VERSION_CODE)"
 

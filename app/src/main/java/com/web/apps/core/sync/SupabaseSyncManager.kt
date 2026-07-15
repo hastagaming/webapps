@@ -17,12 +17,18 @@ class SupabaseSyncManager @Inject constructor(
     private val supabaseClient: SupabaseClient,
     private val firebaseAuth: FirebaseAuth,
     private val containerDao: ContainerDao,
-    private val groupDao: GroupDao
+    private val groupDao: GroupDao,
+    dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context
 ) {
     private fun currentUserEmail(): String? = firebaseAuth.currentUser?.email
 
     suspend fun pushGroup(group: GroupEntity) {
-        val email = currentUserEmail() ?: return
+        val email = currentUserEmail()
+        com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "pushGroup called, email=$email")
+        if (email == null) {
+            com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "pushGroup aborted: no current user email")
+            return
+        }
         try {
             val remote = GroupRemote(
                 user_email = email,
@@ -35,11 +41,17 @@ class SupabaseSyncManager @Inject constructor(
             supabaseClient.postgrest.from("groups").upsert(remote, onConflict = "user_email,cloud_id")
         } catch (e: Exception) {
             Log.e("SupabaseSync", "pushGroup failed", e)
+            com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "pushGroup FAILED: ${e.message}")
         }
     }
 
     suspend fun deleteGroupRemote(cloudId: String) {
-        val email = currentUserEmail() ?: return
+        val email = currentUserEmail()
+        com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "deleteGroupRemote called, email=$email")
+        if (email == null) {
+            com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "deleteGroupRemote aborted: no current user email")
+            return
+        }
         try {
             supabaseClient.postgrest.from("groups").delete {
                 filter {
@@ -49,11 +61,17 @@ class SupabaseSyncManager @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("SupabaseSync", "deleteGroupRemote failed", e)
+            com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "deleteGroupRemote FAILED: ${e.message}")
         }
     }
 
     suspend fun pushContainer(container: ContainerEntity) {
-        val email = currentUserEmail() ?: return
+        val email = currentUserEmail()
+        com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "pushContainer called, email=$email")
+        if (email == null) {
+            com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "pushContainer aborted: no current user email")
+            return
+        }
         try {
             val groupCloudId = container.groupId?.let { groupDao.getGroupById(it)?.cloudId }
 
@@ -75,11 +93,17 @@ class SupabaseSyncManager @Inject constructor(
             supabaseClient.postgrest.from("containers").upsert(remote, onConflict = "user_email,cloud_id")
         } catch (e: Exception) {
             Log.e("SupabaseSync", "pushContainer failed", e)
+            com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "pushContainer FAILED: ${e.message}")
         }
     }
 
     suspend fun deleteContainerRemote(cloudId: String) {
-        val email = currentUserEmail() ?: return
+        val email = currentUserEmail()
+        com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "deleteContainrrRemote called, email=$email")
+        if (email == null) {
+            com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "deleteContainerRemote aborted: no current user email")
+            return
+        }
         try {
             supabaseClient.postgrest.from("containers").delete {
                 filter {
@@ -89,12 +113,17 @@ class SupabaseSyncManager @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("SupabaseSync", "deleteContainerRemote failed", e)
+            com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "deleteContainerRemote FAILED: ${e.message}")
         }
     }
 
     suspend fun pullAndMergeAll() {
-        val email = currentUserEmail() ?: return
-
+        val email = currentUserEmail()
+        com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "pullAndMergeAll called, email=$email")
+        if (email == null) {
+            com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "pullAndMergeQll aborted: no current user email")
+            return
+        }
         try {
             val existingGroupCloudIds = groupDao.getAllGroupsOnce().map { it.cloudId }.toSet()
             val existingContainerCloudIds = containerDao.getAllContainersOnce().map { it.cloudId }.toSet()
@@ -158,6 +187,7 @@ class SupabaseSyncManager @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("SupabaseSync", "pullAndMergeAll failed", e)
+            com.web.apps.core.crash.DebugLogger.log(appContext, "SupabaseSync", "pullAndMergeAll FAILED: ${e.message}")
         }
     }
 }
