@@ -52,9 +52,6 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
 
-        val webClientId = getString(R.string.default_web_client_id)
-        googleSignInHelper.initializeGoogleSignIn(this, webClientId)
-
         val initialContainerId = intent.getLongExtra("EXTRA_CONTAINER_ID", -1L).takeIf { it != -1L }
 
         setContent {
