@@ -72,14 +72,36 @@ jobs:
           path: app/build/reports/tests/testDebugUnitTest
           if-no-files-found: ignore
 
-      - name: Build release APK (unsigned)
+      - name: Determine version from tag
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            TAG_NAME="${GITHUB_REF#refs/tags/v}"
+          else
+            TAG_NAME="0.0.0"
+          fi
+
+          echo "version_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+
+          MAJOR=$(echo "$TAG_NAME" | cut -d. -f1)
+          MINOR=$(echo "$TAG_NAME" | cut -d. -f2)
+          PATCH=$(echo "$TAG_NAME" | cut -d. -f3)
+          VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "Building version: $TAG_NAME (code: $VERSION_CODE)"
+
+      - name: Build Release APKs
+        env:
+          APP_VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          APP_VERSION_CODE: ${{ steps.version.outputs.version_code }}
         run: ./gradlew assembleRelease
 
       - name: Upload release APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: webapps-unsigned-apk
-          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          path: app/build/outputs/apk/release/*-unsigned.apk
 
       - name: Bump cache version on failure
         if: steps.clean_build.outcome == 'failure'

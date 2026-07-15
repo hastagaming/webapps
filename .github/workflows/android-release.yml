@@ -59,38 +59,42 @@ jobs:
         run: |
           echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > release-keystore.jks
 
-      - name: Zipalign APK
-        if: steps.get_tag.outputs.tag != ''
-        run: |
-          $ANDROID_HOME/build-tools/35.0.0/zipalign -v 4 \
-            ./unsigned-apk/app-release-unsigned.apk \
-            ./unsigned-apk/app-release-aligned.apk
-
-      - name: Sign APK with apksigner
+      - name: Zipalign, Sign, and Rename all APKs
         if: steps.get_tag.outputs.tag != ''
         env:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
         run: |
-          $ANDROID_HOME/build-tools/35.0.0/apksigner sign \
-            --ks release-keystore.jks \
-            --ks-key-alias "$SIGNING_KEY_ALIAS" \
-            --ks-pass pass:"$SIGNING_STORE_PASSWORD" \
-            --key-pass pass:"$SIGNING_KEY_PASSWORD" \
-            --out ./unsigned-apk/app-release-signed.apk \
-            ./unsigned-apk/app-release-aligned.apk
+          TAG="${{ steps.get_tag.outputs.tag }}"
 
-      - name: Verify APK signature
-        if: steps.get_tag.outputs.tag != ''
-        run: |
-          $ANDROID_HOME/build-tools/35.0.0/apksigner verify \
-            -v ./unsigned-apk/app-release-signed.apk
+          for APK in ./unsigned-apk/*-unsigned.apk; do
+            BASENAME=$(basename "$APK" -unsigned.apk)
 
-      - name: Rename APK with tag name
-        if: steps.get_tag.outputs.tag != ''
-        run: |
-          mv ./unsigned-apk/app-release-signed.apk "./unsigned-apk/WebApps-${{ steps.get_tag.outputs.tag }}.apk"
+            case "$BASENAME" in
+              *armeabi-v7a*) SUFFIX="arm32" ;;
+              *arm64-v8a*) SUFFIX="arm64" ;;
+              *x86_64*) SUFFIX="x86_64" ;;
+              *) SUFFIX="universal" ;;
+            esac
+
+            ALIGNED="./unsigned-apk/${BASENAME}-aligned.apk"
+            SIGNED="./unsigned-apk/WebApps-${TAG}-${SUFFIX}.apk"
+
+            $ANDROID_HOME/build-tools/35.0.0/zipalign -v 4 "$APK" "$ALIGNED"
+
+            $ANDROID_HOME/build-tools/35.0.0/apksigner sign \
+              --ks release-keystore.jks \
+              --ks-key-alias "$SIGNING_KEY_ALIAS" \
+              --ks-pass pass:"$SIGNING_STORE_PASSWORD" \
+              --key-pass pass:"$SIGNING_KEY_PASSWORD" \
+              --out "$SIGNED" \
+              "$ALIGNED"
+
+            $ANDROID_HOME/build-tools/35.0.0/apksigner verify -v "$SIGNED"
+
+            echo "Signed: $SIGNED"
+          done
 
       - name: Remove keystore file
         if: always()
