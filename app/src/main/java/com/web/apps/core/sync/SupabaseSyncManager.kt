@@ -18,7 +18,7 @@ class SupabaseSyncManager @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val containerDao: ContainerDao,
     private val groupDao: GroupDao,
-    dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context
+    @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context
 ) {
     private fun currentUserEmail(): String? = firebaseAuth.currentUser?.email
 
