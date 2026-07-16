@@ -57,6 +57,7 @@ fun SettingsScreen(
     onNavigateToPlugins: () -> Unit,
     isDeveloper: Boolean = false,
     onNavigateToLogViewer: () -> Unit = {},
+    onNavigateToBugReport: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val isDeveloper by viewModel.isDeveloper.collectAsState(initial = false)
@@ -177,6 +178,13 @@ fun SettingsScreen(
                     modifier = Modifier.clickable(onClick = onNavigateToLogViewer)
                 )
             }
+
+            ListItem(
+                headlineContent = { Text("Report a Bug") },
+                supportingContent = { Text("Found something broken? Let us know") },
+                leadingContent = { Icon(androidx.compose.material.icons.Icons.Filled.BugReport, contentDescription = null) },
+                modifier = Modifier.clickable(onClick = onNavigateToBugReport)
+            )
         }
     }
 

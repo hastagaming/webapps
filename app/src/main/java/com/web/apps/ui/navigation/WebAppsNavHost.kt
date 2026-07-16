@@ -9,6 +9,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.navigation.navArgument
 import com.google.firebase.auth.FirebaseAuth
 import com.web.apps.core.container.ContainerManager
@@ -37,6 +42,7 @@ object WebAppsDestinations {
     const val QR_SCAN = "qr_scan"
     const val STATISTICS = "statistics"
     const val CONTAINER_LOCK = "container_lock/{containerId}"
+    const val BUG_REPORT = "bug_report"
     const val SOURCE_INSPECTOR = "source_inspector/{containerId}"
     const val PLUGIN_BROWSER = "plugin_browser"
     const val ONBOARDING = "onboarding"
@@ -48,6 +54,36 @@ object WebAppsDestinations {
     fun containerLockRoute(containerId: Long) = "container_lock/$containerId"
     fun sourceInspectorRoute(containerId: Long) = "source_inspector/$containerId"
     fun permissionManagerRoute(containerId: Long) = "permission_manager/$containerId"
+}
+
+private const val TRANSITION_DURATION_MS = 300
+
+private fun defaultEnterTransition(): androidx.navigation.NavBackStackEntry.() -> androidx.compose.animation.EnterTransition = {
+    slideInHorizontally(
+        initialOffsetX = { fullWidth -> fullWidth },
+        animationSpec = tween(TRANSITION_DURATION_MS)
+    ) + fadeIn(animationSpec = tween(TRANSITION_DURATION_MS))
+}
+
+private fun defaultExitTransition(): androidx.navigation.NavBackStackEntry.() -> androidx.compose.animation.ExitTransition = {
+    slideOutHorizontally(
+        targetOffsetX = { fullWidth -> -fullWidth / 4 },
+        animationSpec = tween(TRANSITION_DURATION_MS)
+    ) + fadeOut(animationSpec = tween(TRANSITION_DURATION_MS))
+}
+
+private fun defaultPopEnterTransition(): androidx.navigation.NavBackStackEntry.() -> androidx.compose.animation.EnterTransition = {
+    slideInHorizontally(
+        initialOffsetX = { fullWidth -> -fullWidth / 4 },
+        animationSpec = tween(TRANSITION_DURATION_MS)
+    ) + fadeIn(animationSpec = tween(TRANSITION_DURATION_MS))
+}
+
+private fun defaultPopExitTransition(): androidx.navigation.NavBackStackEntry.() -> androidx.compose.animation.ExitTransition = {
+    slideOutHorizontally(
+        targetOffsetX = { fullWidth -> fullWidth },
+        animationSpec = tween(TRANSITION_DURATION_MS)
+    ) + fadeOut(animationSpec = tween(TRANSITION_DURATION_MS))
 }
 
 @Composable
@@ -78,7 +114,13 @@ fun WebAppsNavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-        composable(WebAppsDestinations.LOGIN) {
+        composable(
+            WebAppsDestinations.LOGIN,
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
+        ) {
             onUpdateScreenActiveChanged(false)
             LoginScreen(
                 onLoginSuccess = {
@@ -89,7 +131,13 @@ fun WebAppsNavHost(
             )
         }
 
-        composable(WebAppsDestinations.ONBOARDING) {
+        composable(
+            WebAppsDestinations.ONBOARDING,
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
+        ) {
             onUpdateScreenActiveChanged(false)
             val onboardingScope = androidx.compose.runtime.rememberCoroutineScope()
             com.web.apps.ui.onboarding.OnboardingScreen(
@@ -104,7 +152,24 @@ fun WebAppsNavHost(
             )
         }
 
-        composable(WebAppsDestinations.CONTAINER_LIST) {
+        composable(
+            WebAppsDestinations.BUG_REPORT,
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
+        ) {
+            onUpdateScreenActiveChanged(false)
+            com.web.apps.ui.bugreport.BugReportScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(
+            WebAppsDestinations.CONTAINER_LIST,
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
+        ) {
             onUpdateScreenActiveChanged(false)
             ContainerListScreen(
                 onContainerClick = { containerId ->
@@ -127,14 +192,24 @@ fun WebAppsNavHost(
             )
         }
 
-        composable(WebAppsDestinations.LOG_VIEWER) {
+        composable(
+            WebAppsDestinations.LOG_VIEWER,
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
+        ) {
             onUpdateScreenActiveChanged(false)
             com.web.apps.ui.logviewer.LogViewerScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(
             route = WebAppsDestinations.BROWSER,
-            arguments = listOf(navArgument("containerId") { type = NavType.LongType })
+            arguments = listOf(navArgument("containerId") { type = NavType.LongType }),
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
         ) {
             onUpdateScreenActiveChanged(false)
             val context = LocalContext.current
@@ -156,7 +231,13 @@ fun WebAppsNavHost(
             )
         }
 
-        composable(WebAppsDestinations.BACKUP) {
+        composable(
+            WebAppsDestinations.BACKUP,
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
+        ) {
             onUpdateScreenActiveChanged(false)
             BackupScreen(
                 onNavigateBack = { navController.popBackStack() },
@@ -165,12 +246,24 @@ fun WebAppsNavHost(
             )
         }
 
-        composable(WebAppsDestinations.PLUGIN_BROWSER) {
+        composable(
+            WebAppsDestinations.PLUGIN_BROWSER,
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
+        ) {
             onUpdateScreenActiveChanged(false)
             com.web.apps.ui.plugin.PluginBrowserScreen(onNavigateBack = { navController.popBackStack() })
         }
 
-        composable(WebAppsDestinations.STATISTICS) {
+        composable(
+            WebAppsDestinations.STATISTICS,
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
+        ) {
             onUpdateScreenActiveChanged(false)
             com.web.apps.ui.statistics.StatisticsScreen(
                 onNavigateBack = { navController.popBackStack() }
@@ -179,7 +272,11 @@ fun WebAppsNavHost(
 
         composable(
             route = WebAppsDestinations.CONTAINER_LOCK,
-            arguments = listOf(navArgument("containerId") { type = NavType.LongType })
+            arguments = listOf(navArgument("containerId") { type = NavType.LongType }),
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
         ) {
             onUpdateScreenActiveChanged(false)
             ContainerLockScreen(
@@ -189,7 +286,11 @@ fun WebAppsNavHost(
 
         composable(
             route = WebAppsDestinations.SOURCE_INSPECTOR,
-            arguments = listOf(navArgument("containerId") { type = NavType.LongType })
+            arguments = listOf(navArgument("containerId") { type = NavType.LongType }),
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
         ) {
             onUpdateScreenActiveChanged(false)
             SourceInspectorScreen(
@@ -199,7 +300,11 @@ fun WebAppsNavHost(
 
         composable(
             route = WebAppsDestinations.PERMISSION_MANAGER,
-            arguments = listOf(navArgument("containerId") { type = NavType.LongType })
+            arguments = listOf(navArgument("containerId") { type = NavType.LongType }),
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
         ) {
             onUpdateScreenActiveChanged(false)
             PermissionManagerScreen(
@@ -207,18 +312,31 @@ fun WebAppsNavHost(
             )
         }
 
-        composable(WebAppsDestinations.SETTINGS) {
+        composable(
+            WebAppsDestinations.SETTINGS,
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
+        ) {
             onUpdateScreenActiveChanged(false)
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToUpdate = { navController.navigate(WebAppsDestinations.UPDATE_SYSTEM) },
                 onNavigateToPlugins = { navController.navigate(WebAppsDestinations.PLUGIN_BROWSER) },
+                onNavigateToBugReport = { navController.navigate(WebAppsDestinations.BUG_REPORT) },
                 onNavigateToLogViewer = { navController.navigate(WebAppsDestinations.LOG_VIEWER) },
                 onNavigateToStatistics = { navController.navigate(WebAppsDestinations.STATISTICS) }
             )
         }
 
-        composable(WebAppsDestinations.UPDATE_SYSTEM) {
+        composable(
+            WebAppsDestinations.UPDATE_SYSTEM,
+            enterTransition = defaultEnterTransition(),
+            exitTransition = defaultExitTransition(),
+            popEnterTransition = defaultPopEnterTransition(),
+            popExitTransition = defaultPopExitTransition()
+        ) {
             onUpdateScreenActiveChanged(true)
             UpdateScreen(
                 onFinished = {

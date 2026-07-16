@@ -31,6 +31,7 @@ class ContainerListViewModel @Inject constructor(
     private val serviceController: ContainerServiceController,
     private val containerManager: com.web.apps.core.container.ContainerManager,
     private val authRepository: AuthRepository,
+    private val changelogManager: com.web.apps.core.update.ChangelogManager,
     pluginPreferenceManager: PluginPreferenceManager,
     @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context
 ) : ViewModel() {
@@ -38,6 +39,24 @@ class ContainerListViewModel @Inject constructor(
     private var lastDeletedContainer: ContainerEntity? = null
     private var lastDeletedGroup: GroupEntity? = null
     val undoEvent = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 1)
+    private val _changelogState = MutableStateFlow<com.web.apps.core.update.ChangelogResult?>(null)
+    val changelogState: StateFlow<com.web.apps.core.update.ChangelogResult?> = _changelogState.asStateFlow()
+
+    fun checkChangelog() {
+        viewModelScope.launch {
+            val result = changelogManager.checkForChangelog()
+            if (result is com.web.apps.core.update.ChangelogResult.Available) {
+                _changelogState.value = result
+            }
+        }
+    }
+
+    fun dismissChangelog() {
+        viewModelScope.launch {
+            changelogManager.markAsSeen()
+            _changelogState.value = null
+        }
+    }
     private val _uiState = MutableStateFlow(ContainerListUiState())
     val currentUser: StateFlow<FirebaseUser?> = authRepository.observeAuthState()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), authRepository.currentUser)

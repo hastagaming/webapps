@@ -40,17 +40,64 @@ import java.io.File
 fun LogViewerScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(0) }
-    var crashFiles by remember { mutableStateOf<List<File>>(emptyList()) }
+    var crashEntries by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var debugLogContent by remember { mutableStateOf("") }
 
     fun refresh() {
         try {
-            val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-            val crashDir = File(downloadsDir, "WebApps/crashes")
-            crashFiles = crashDir.listFiles()?.sortedByDescending { it.lastModified() } ?: emptyList()
+            val resolver = context.contentResolver
+            val newCrashEntries = mutableListOf<Pair<String, String>>()
 
-            val debugFile = File(downloadsDir, "WebApps/debug_logs/debug.txt")
-            debugLogContent = if (debugFile.exists()) debugFile.readText() else "No debug log found."
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                val projection = arrayOf(
+                    android.provider.MediaStore.Downloads._ID,
+                    android.provider.MediaStore.Downloads.DISPLAY_NAME,
+                    android.provider.MediaStore.Downloads.RELATIVE_PATH
+                )
+
+                resolver.query(
+                    android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    projection, null, null,
+                    "${android.provider.MediaStore.Downloads.DATE_ADDED} DESC"
+                )?.use { cursor ->
+                    val idIndex = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Downloads._ID)
+                    val nameIndex = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Downloads.DISPLAY_NAME)
+                    val pathIndex = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Downloads.RELATIVE_PATH)
+
+                    while (cursor.moveToNext()) {
+                        val relativePath = cursor.getString(pathIndex) ?: ""
+                        val displayName = cursor.getString(nameIndex) ?: ""
+
+                        if (relativePath.contains("WebApps/crashes")) {
+                            val id = cursor.getLong(idIndex)
+                            val uri = android.content.ContentUris.withAppendedId(
+                                android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, id
+                            )
+                            val content = try {
+                                resolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: ""
+                            } catch (e: Exception) {
+                                "(failed to read: ${e.message})"
+                            }
+                            newCrashEntries.add(displayName to content)
+                        }
+
+                        if (relativePath.contains("WebApps/debug_logs") && displayName == "debug.txt") {
+                            val id = cursor.getLong(idIndex)
+                            val uri = android.content.ContentUris.withAppendedId(
+                                android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, id
+                            )
+                            debugLogContent = try {
+                                resolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: "Empty log."
+                            } catch (e: Exception) {
+                                "Failed to read debug log: ${e.message}"
+                            }
+                        }
+                    }
+                }
+            }
+
+            crashEntries = newCrashEntries
+            if (debugLogContent.isBlank()) debugLogContent = "No debug log found."
         } catch (e: Exception) {
             debugLogContent = "Failed to read logs: ${e.message}"
         }
@@ -83,16 +130,16 @@ fun LogViewerScreen(onNavigateBack: () -> Unit) {
 
             when (selectedTab) {
                 0 -> {
-                    if (crashFiles.isEmpty()) {
+                    if (crashEntries.isEmpty()) {
                         Text("No crash logs found.", modifier = Modifier.padding(16.dp))
                     } else {
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
-                            items(crashFiles) { file ->
+                            items(crashEntries) { (name, content) ->
                                 ListItem(
-                                    headlineContent = { Text(file.name) },
+                                    headlineContent = { Text(name) },
                                     supportingContent = {
                                         Text(
-                                            file.readText().take(200),
+                                            content.take(200),
                                             maxLines = 3,
                                             fontFamily = FontFamily.Monospace,
                                             fontSize = 11.sp

@@ -10,6 +10,8 @@ import java.io.File
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -100,6 +102,24 @@ fun ContainerListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    val changelogState by viewModel.changelogState.collectAsState()
+    val hapticFeedback = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val changelog = changelogState
+    if (changelog is com.web.apps.core.update.ChangelogResult.Available) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissChangelog() },
+            title = { Text("What's New in v${changelog.versionName}") },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    com.web.apps.ui.common.MarkdownText(markdown = changelog.notes)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.dismissChangelog() }) { Text("Got it") }
+            }
+        )
+    }
+
     LaunchedEffect(Unit) {
         viewModel.undoEvent.collect { info ->
             val name = info.substringAfter(":")
@@ -113,6 +133,7 @@ fun ContainerListScreen(
             }
         }
         com.web.apps.core.notification.BadgeCountManager().clearBadge(context)
+        viewModel.checkChangelog()
     }
     var fabMenuExpanded by remember { mutableStateOf(false) }
     var containerForGroupMove by remember { mutableStateOf<ContainerEntity?>(null) }
@@ -697,23 +718,43 @@ private fun ContainerTile(
             )
             DropdownMenuItem(
                 text = { Text("Move Up") },
-                onClick = { menuExpanded = false; onMoveUp() }
+                onClick = {
+                    menuExpanded = false
+                    hapticFeedback.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    onMoveUp()
+                }
             )
             DropdownMenuItem(
                 text = { Text("Move Down") },
-                onClick = { menuExpanded = false; onMoveDown() }
+                onClick = {
+                    menuExpanded = false
+                    hapticFeedback.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    onMoveDown()
+                }
             )
             DropdownMenuItem(
                 text = { Text("Move to Group") },
-                onClick = { menuExpanded = false; onRequestMoveToGroup() }
+                onClick = {
+                    menuExpanded = false
+                    hapticFeedback.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    onRequestMoveToGroup()
+                }
             )
             DropdownMenuItem(
                 text = { Text(if (container.isNotificationEnabled) "Disable Notifications" else "Enable Notifications") },
-                onClick = { menuExpanded = false; onToggleNotification(!container.isNotificationEnabled) }
+                onClick = {
+                    menuExpanded = false
+                    hapticFeedback.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    onToggleNotification(!container.isNotificationEnabled)
+                }
             )
             DropdownMenuItem(
                 text = { Text(if (container.isPinned) "Unpin" else "Pin to Top") },
-                onClick = { menuExpanded = false; onTogglePin(!container.isPinned) }
+                onClick = {
+                    menuExpanded = false
+                    hapticFeedback.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    onTogglePin(!container.isPinned)
+                }
             )
             DropdownMenuItem(
                 text = { Text("Delete") },
