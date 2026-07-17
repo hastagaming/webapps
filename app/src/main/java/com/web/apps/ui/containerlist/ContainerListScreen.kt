@@ -103,7 +103,6 @@ fun ContainerListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val changelogState by viewModel.changelogState.collectAsState()
-    val hapticFeedback = androidx.compose.ui.platform.LocalHapticFeedback.current
     val changelog = changelogState
     if (changelog is com.web.apps.core.update.ChangelogResult.Available) {
         AlertDialog(
@@ -624,6 +623,7 @@ private fun ContainerTile(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val hapticFeedback = androidx.compose.ui.platform.LocalHapticFeedback.current
 
     val iconPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()

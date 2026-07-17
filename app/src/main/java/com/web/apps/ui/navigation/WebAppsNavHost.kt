@@ -58,28 +58,28 @@ object WebAppsDestinations {
 
 private const val TRANSITION_DURATION_MS = 300
 
-private fun defaultEnterTransition(): androidx.navigation.NavBackStackEntry.() -> androidx.compose.animation.EnterTransition = {
+private fun defaultEnterTransition(): androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.EnterTransition = {
     slideInHorizontally(
         initialOffsetX = { fullWidth -> fullWidth },
         animationSpec = tween(TRANSITION_DURATION_MS)
     ) + fadeIn(animationSpec = tween(TRANSITION_DURATION_MS))
 }
 
-private fun defaultExitTransition(): androidx.navigation.NavBackStackEntry.() -> androidx.compose.animation.ExitTransition = {
+private fun defaultExitTransition(): androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.ExitTransition = {
     slideOutHorizontally(
         targetOffsetX = { fullWidth -> -fullWidth / 4 },
         animationSpec = tween(TRANSITION_DURATION_MS)
     ) + fadeOut(animationSpec = tween(TRANSITION_DURATION_MS))
 }
 
-private fun defaultPopEnterTransition(): androidx.navigation.NavBackStackEntry.() -> androidx.compose.animation.EnterTransition = {
+private fun defaultPopEnterTransition(): androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.EnterTransition = {
     slideInHorizontally(
         initialOffsetX = { fullWidth -> -fullWidth / 4 },
         animationSpec = tween(TRANSITION_DURATION_MS)
     ) + fadeIn(animationSpec = tween(TRANSITION_DURATION_MS))
 }
 
-private fun defaultPopExitTransition(): androidx.navigation.NavBackStackEntry.() -> androidx.compose.animation.ExitTransition = {
+private fun defaultPopExitTransition(): androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.ExitTransition = {
     slideOutHorizontally(
         targetOffsetX = { fullWidth -> fullWidth },
         animationSpec = tween(TRANSITION_DURATION_MS)
