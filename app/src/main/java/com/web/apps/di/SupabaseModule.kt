@@ -17,7 +17,7 @@ object SupabaseModule {
     @Singleton
     fun provideSupabaseClient(): SupabaseClient = createSupabaseClient(
         supabaseUrl = "https://ouaxmljxepgvgwgxrcil.supabase.co",
-        supabaseKey = "nEbxCD7wstWIJz2Q"
+        supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91YXhtbGp4ZXBndmd3Z3hyY2lsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1MDMxNDQsImV4cCI6MjA5OTA3OTE0NH0.KtLMnEIIQiwq2t73ctRpQmXB9BSNBkYKY7VbIqmYcuo"
     ) {
         defaultSerializer = io.github.jan.supabase.serializer.KotlinXSerializer(
             kotlinx.serialization.json.Json {
