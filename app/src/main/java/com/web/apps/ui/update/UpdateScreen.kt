@@ -36,7 +36,14 @@ fun UpdateScreen(
         // Block back button saat update sedang berlangsung
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(uiState.needsInstallPermission) {
+        if (uiState.needsInstallPermission) {
+            val intent = android.content.Intent(
+                android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                android.net.Uri.parse("package:${context.packageName}")
+            )
+            context.startActivity(intent)
+        }
         viewModel.startUpdateFlow(context)
     }
 

@@ -44,7 +44,7 @@ class UpdateViewModel @Inject constructor(
                     if (!updateManager.canRequestPackageInstalls(context)) {
                         _uiState.value = _uiState.value.copy(
                             isBusy = false,
-                            errorMessage = "Please allow WebApps to install unknown apps in system settings, then try again."
+                            needsInstallPermission = true
                         )
                         return@launch
                     }

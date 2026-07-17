@@ -6,5 +6,6 @@ data class UpdateUiState(
     val isBusy: Boolean = true,
     val isUpToDate: Boolean = false,
     val isInstalling: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val needsInstallPermission: Boolean = false
 )
